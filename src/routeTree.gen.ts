@@ -12,6 +12,22 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppCollectionsRouteImport } from './routes/app.collections'
+import { Route as AppFulfillmentRouteImport } from './routes/app.fulfillment'
+import { Route as AppMyOrdersRouteImport } from './routes/app.my-orders'
+import { Route as AppOfferRouteImport } from './routes/app.offer'
+import { Route as AppOrdersRouteImport } from './routes/app.orders'
+import { Route as AppReportsRouteImport } from './routes/app.reports'
+import { Route as AppAdminAuditLogRouteImport } from './routes/app.admin.audit-log'
+import { Route as AppAdminDeliveryPointsRouteImport } from './routes/app.admin.delivery-points'
+import { Route as AppAdminEmployeesRouteImport } from './routes/app.admin.employees'
+import { Route as AppAdminSettingsRouteImport } from './routes/app.admin.settings'
+import { Route as AppOperatorIndexRouteImport } from './routes/app.operator.index'
+import { Route as AppOperatorNewBatchRouteImport } from './routes/app.operator.new-batch'
+import { Route as AppOperatorPublishRouteImport } from './routes/app.operator.publish'
+import { Route as AppOrderNewRouteImport } from './routes/app.order.new'
+import { Route as AppOrderConfirmationOrderIdRouteImport } from './routes/app.order.confirmation.$orderId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,34 +44,219 @@ const LoginRoute = LoginRouteImport.update({
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AppIndexRoute = AppIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppCollectionsRoute = AppCollectionsRouteImport.update({
+  id: '/collections',
+  path: '/collections',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppFulfillmentRoute = AppFulfillmentRouteImport.update({
+  id: '/fulfillment',
+  path: '/fulfillment',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppMyOrdersRoute = AppMyOrdersRouteImport.update({
+  id: '/my-orders',
+  path: '/my-orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOfferRoute = AppOfferRouteImport.update({
+  id: '/offer',
+  path: '/offer',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrdersRoute = AppOrdersRouteImport.update({
+  id: '/orders',
+  path: '/orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppReportsRoute = AppReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminAuditLogRoute = AppAdminAuditLogRouteImport.update({
+  id: '/admin/audit-log',
+  path: '/admin/audit-log',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminDeliveryPointsRoute = AppAdminDeliveryPointsRouteImport.update({
+  id: '/admin/delivery-points',
+  path: '/admin/delivery-points',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminEmployeesRoute = AppAdminEmployeesRouteImport.update({
+  id: '/admin/employees',
+  path: '/admin/employees',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppAdminSettingsRoute = AppAdminSettingsRouteImport.update({
+  id: '/admin/settings',
+  path: '/admin/settings',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOperatorIndexRoute = AppOperatorIndexRouteImport.update({
+  id: '/operator/',
+  path: '/operator/',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOperatorNewBatchRoute = AppOperatorNewBatchRouteImport.update({
+  id: '/operator/new-batch',
+  path: '/operator/new-batch',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOperatorPublishRoute = AppOperatorPublishRouteImport.update({
+  id: '/operator/publish',
+  path: '/operator/publish',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrderNewRoute = AppOrderNewRouteImport.update({
+  id: '/order/new',
+  path: '/order/new',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppOrderConfirmationOrderIdRoute =
+  AppOrderConfirmationOrderIdRouteImport.update({
+    id: '/order/confirmation/$orderId',
+    path: '/order/confirmation/$orderId',
+    getParentRoute: () => AppRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/app': typeof AppRoute
+  '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/app/collections': typeof AppCollectionsRoute
+  '/app/fulfillment': typeof AppFulfillmentRoute
+  '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/offer': typeof AppOfferRoute
+  '/app/orders': typeof AppOrdersRoute
+  '/app/reports': typeof AppReportsRoute
+  '/app/': typeof AppIndexRoute
+  '/app/admin/audit-log': typeof AppAdminAuditLogRoute
+  '/app/admin/delivery-points': typeof AppAdminDeliveryPointsRoute
+  '/app/admin/employees': typeof AppAdminEmployeesRoute
+  '/app/admin/settings': typeof AppAdminSettingsRoute
+  '/app/operator/new-batch': typeof AppOperatorNewBatchRoute
+  '/app/operator/publish': typeof AppOperatorPublishRoute
+  '/app/order/new': typeof AppOrderNewRoute
+  '/app/operator/': typeof AppOperatorIndexRoute
+  '/app/order/confirmation/$orderId': typeof AppOrderConfirmationOrderIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/app': typeof AppRoute
   '/login': typeof LoginRoute
+  '/app/collections': typeof AppCollectionsRoute
+  '/app/fulfillment': typeof AppFulfillmentRoute
+  '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/offer': typeof AppOfferRoute
+  '/app/orders': typeof AppOrdersRoute
+  '/app/reports': typeof AppReportsRoute
+  '/app': typeof AppIndexRoute
+  '/app/admin/audit-log': typeof AppAdminAuditLogRoute
+  '/app/admin/delivery-points': typeof AppAdminDeliveryPointsRoute
+  '/app/admin/employees': typeof AppAdminEmployeesRoute
+  '/app/admin/settings': typeof AppAdminSettingsRoute
+  '/app/operator/new-batch': typeof AppOperatorNewBatchRoute
+  '/app/operator/publish': typeof AppOperatorPublishRoute
+  '/app/order/new': typeof AppOrderNewRoute
+  '/app/operator': typeof AppOperatorIndexRoute
+  '/app/order/confirmation/$orderId': typeof AppOrderConfirmationOrderIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/app': typeof AppRoute
+  '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
+  '/app/collections': typeof AppCollectionsRoute
+  '/app/fulfillment': typeof AppFulfillmentRoute
+  '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/offer': typeof AppOfferRoute
+  '/app/orders': typeof AppOrdersRoute
+  '/app/reports': typeof AppReportsRoute
+  '/app/': typeof AppIndexRoute
+  '/app/admin/audit-log': typeof AppAdminAuditLogRoute
+  '/app/admin/delivery-points': typeof AppAdminDeliveryPointsRoute
+  '/app/admin/employees': typeof AppAdminEmployeesRoute
+  '/app/admin/settings': typeof AppAdminSettingsRoute
+  '/app/operator/new-batch': typeof AppOperatorNewBatchRoute
+  '/app/operator/publish': typeof AppOperatorPublishRoute
+  '/app/order/new': typeof AppOrderNewRoute
+  '/app/operator/': typeof AppOperatorIndexRoute
+  '/app/order/confirmation/$orderId': typeof AppOrderConfirmationOrderIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/app' | '/login'
+  fullPaths:
+    | '/'
+    | '/app'
+    | '/login'
+    | '/app/collections'
+    | '/app/fulfillment'
+    | '/app/my-orders'
+    | '/app/offer'
+    | '/app/orders'
+    | '/app/reports'
+    | '/app/'
+    | '/app/admin/audit-log'
+    | '/app/admin/delivery-points'
+    | '/app/admin/employees'
+    | '/app/admin/settings'
+    | '/app/operator/new-batch'
+    | '/app/operator/publish'
+    | '/app/order/new'
+    | '/app/operator/'
+    | '/app/order/confirmation/$orderId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app' | '/login'
-  id: '__root__' | '/' | '/app' | '/login'
+  to:
+    | '/'
+    | '/login'
+    | '/app/collections'
+    | '/app/fulfillment'
+    | '/app/my-orders'
+    | '/app/offer'
+    | '/app/orders'
+    | '/app/reports'
+    | '/app'
+    | '/app/admin/audit-log'
+    | '/app/admin/delivery-points'
+    | '/app/admin/employees'
+    | '/app/admin/settings'
+    | '/app/operator/new-batch'
+    | '/app/operator/publish'
+    | '/app/order/new'
+    | '/app/operator'
+    | '/app/order/confirmation/$orderId'
+  id:
+    | '__root__'
+    | '/'
+    | '/app'
+    | '/login'
+    | '/app/collections'
+    | '/app/fulfillment'
+    | '/app/my-orders'
+    | '/app/offer'
+    | '/app/orders'
+    | '/app/reports'
+    | '/app/'
+    | '/app/admin/audit-log'
+    | '/app/admin/delivery-points'
+    | '/app/admin/employees'
+    | '/app/admin/settings'
+    | '/app/operator/new-batch'
+    | '/app/operator/publish'
+    | '/app/order/new'
+    | '/app/operator/'
+    | '/app/order/confirmation/$orderId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AppRoute: typeof AppRoute
+  AppRoute: typeof AppRouteWithChildren
   LoginRoute: typeof LoginRoute
 }
 
@@ -82,12 +283,164 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/app/': {
+      id: '/app/'
+      path: '/'
+      fullPath: '/app/'
+      preLoaderRoute: typeof AppIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/collections': {
+      id: '/app/collections'
+      path: '/collections'
+      fullPath: '/app/collections'
+      preLoaderRoute: typeof AppCollectionsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/fulfillment': {
+      id: '/app/fulfillment'
+      path: '/fulfillment'
+      fullPath: '/app/fulfillment'
+      preLoaderRoute: typeof AppFulfillmentRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/my-orders': {
+      id: '/app/my-orders'
+      path: '/my-orders'
+      fullPath: '/app/my-orders'
+      preLoaderRoute: typeof AppMyOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/offer': {
+      id: '/app/offer'
+      path: '/offer'
+      fullPath: '/app/offer'
+      preLoaderRoute: typeof AppOfferRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/orders': {
+      id: '/app/orders'
+      path: '/orders'
+      fullPath: '/app/orders'
+      preLoaderRoute: typeof AppOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/reports': {
+      id: '/app/reports'
+      path: '/reports'
+      fullPath: '/app/reports'
+      preLoaderRoute: typeof AppReportsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/audit-log': {
+      id: '/app/admin/audit-log'
+      path: '/admin/audit-log'
+      fullPath: '/app/admin/audit-log'
+      preLoaderRoute: typeof AppAdminAuditLogRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/delivery-points': {
+      id: '/app/admin/delivery-points'
+      path: '/admin/delivery-points'
+      fullPath: '/app/admin/delivery-points'
+      preLoaderRoute: typeof AppAdminDeliveryPointsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/employees': {
+      id: '/app/admin/employees'
+      path: '/admin/employees'
+      fullPath: '/app/admin/employees'
+      preLoaderRoute: typeof AppAdminEmployeesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/admin/settings': {
+      id: '/app/admin/settings'
+      path: '/admin/settings'
+      fullPath: '/app/admin/settings'
+      preLoaderRoute: typeof AppAdminSettingsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/operator/': {
+      id: '/app/operator/'
+      path: '/operator'
+      fullPath: '/app/operator/'
+      preLoaderRoute: typeof AppOperatorIndexRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/operator/new-batch': {
+      id: '/app/operator/new-batch'
+      path: '/operator/new-batch'
+      fullPath: '/app/operator/new-batch'
+      preLoaderRoute: typeof AppOperatorNewBatchRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/operator/publish': {
+      id: '/app/operator/publish'
+      path: '/operator/publish'
+      fullPath: '/app/operator/publish'
+      preLoaderRoute: typeof AppOperatorPublishRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/order/new': {
+      id: '/app/order/new'
+      path: '/order/new'
+      fullPath: '/app/order/new'
+      preLoaderRoute: typeof AppOrderNewRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/order/confirmation/$orderId': {
+      id: '/app/order/confirmation/$orderId'
+      path: '/order/confirmation/$orderId'
+      fullPath: '/app/order/confirmation/$orderId'
+      preLoaderRoute: typeof AppOrderConfirmationOrderIdRouteImport
+      parentRoute: typeof AppRoute
+    }
   }
 }
 
+interface AppRouteChildren {
+  AppCollectionsRoute: typeof AppCollectionsRoute
+  AppFulfillmentRoute: typeof AppFulfillmentRoute
+  AppMyOrdersRoute: typeof AppMyOrdersRoute
+  AppOfferRoute: typeof AppOfferRoute
+  AppOrdersRoute: typeof AppOrdersRoute
+  AppReportsRoute: typeof AppReportsRoute
+  AppIndexRoute: typeof AppIndexRoute
+  AppAdminAuditLogRoute: typeof AppAdminAuditLogRoute
+  AppAdminDeliveryPointsRoute: typeof AppAdminDeliveryPointsRoute
+  AppAdminEmployeesRoute: typeof AppAdminEmployeesRoute
+  AppAdminSettingsRoute: typeof AppAdminSettingsRoute
+  AppOperatorNewBatchRoute: typeof AppOperatorNewBatchRoute
+  AppOperatorPublishRoute: typeof AppOperatorPublishRoute
+  AppOrderNewRoute: typeof AppOrderNewRoute
+  AppOperatorIndexRoute: typeof AppOperatorIndexRoute
+  AppOrderConfirmationOrderIdRoute: typeof AppOrderConfirmationOrderIdRoute
+}
+
+const AppRouteChildren: AppRouteChildren = {
+  AppCollectionsRoute: AppCollectionsRoute,
+  AppFulfillmentRoute: AppFulfillmentRoute,
+  AppMyOrdersRoute: AppMyOrdersRoute,
+  AppOfferRoute: AppOfferRoute,
+  AppOrdersRoute: AppOrdersRoute,
+  AppReportsRoute: AppReportsRoute,
+  AppIndexRoute: AppIndexRoute,
+  AppAdminAuditLogRoute: AppAdminAuditLogRoute,
+  AppAdminDeliveryPointsRoute: AppAdminDeliveryPointsRoute,
+  AppAdminEmployeesRoute: AppAdminEmployeesRoute,
+  AppAdminSettingsRoute: AppAdminSettingsRoute,
+  AppOperatorNewBatchRoute: AppOperatorNewBatchRoute,
+  AppOperatorPublishRoute: AppOperatorPublishRoute,
+  AppOrderNewRoute: AppOrderNewRoute,
+  AppOperatorIndexRoute: AppOperatorIndexRoute,
+  AppOrderConfirmationOrderIdRoute: AppOrderConfirmationOrderIdRoute,
+}
+
+const AppRouteWithChildren = AppRoute._addFileChildren(AppRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AppRoute: AppRoute,
+  AppRoute: AppRouteWithChildren,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
