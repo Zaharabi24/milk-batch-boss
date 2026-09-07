@@ -63,7 +63,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [collections, setCollections] = useState<CollectionRecord[]>(seedCollections);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(seedAudit);
 
-  const currentEmployee = employees[0] ?? seedEmployees[0]!;
+  // Demo persona for the Employee role: Ayesha Siddika (HR, Head Office).
+  const currentEmployee = employees.find((e) => e.id === "EMP-1006") ?? seedEmployees[0]!;
 
   const addAudit = useCallback((entry: Omit<AuditLog, "id" | "timestamp">) => {
     setAuditLogs((prev) => [
