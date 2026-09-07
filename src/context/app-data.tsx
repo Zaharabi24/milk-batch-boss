@@ -63,7 +63,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [collections, setCollections] = useState<CollectionRecord[]>(seedCollections);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(seedAudit);
 
-  const currentEmployee = employees[0];
+  const currentEmployee = employees[0] ?? seedEmployees[0]!;
 
   const addAudit = useCallback((entry: Omit<AuditLog, "id" | "timestamp">) => {
     setAuditLogs((prev) => [
