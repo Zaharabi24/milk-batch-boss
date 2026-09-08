@@ -111,13 +111,13 @@ function OperatorDashboard() {
         <div className="mt-4 h-72 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={trend}>
-              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="name" tickLine={false} axisLine={false} fontSize={12} />
               <YAxis tickLine={false} axisLine={false} fontSize={12} />
-              <Tooltip cursor={{ fill: "hsl(var(--secondary))" }} />
-              <Bar dataKey="Produced" fill="hsl(var(--muted-foreground))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Booked" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              <Bar dataKey="Delivered" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+              <Tooltip cursor={{ fill: "var(--secondary)" }} />
+              <Bar dataKey="Produced" fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Booked" fill="var(--primary)" radius={[4, 4, 0, 0]} />
+              <Bar dataKey="Delivered" fill="var(--accent)" radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </div>
