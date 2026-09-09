@@ -632,6 +632,13 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      grant_role: {
+        Args: {
+          p_email: string
+          p_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -676,6 +683,40 @@ export type Database = {
         }
       }
       remaining_litres: { Args: { _batch_no: string }; Returns: number }
+      save_settings: {
+        Args: {
+          p_auto_close_at_cutoff: boolean
+          p_default_cutoff: string
+          p_default_delivery_window: string
+          p_default_employee_cap: number
+          p_default_max_order: number
+          p_default_min_order: number
+          p_default_rate: number
+          p_email_on_publish: boolean
+          p_sms_before_cutoff: boolean
+          p_terms: string
+        }
+        Returns: {
+          auto_close_at_cutoff: boolean
+          default_cutoff: string
+          default_delivery_window: string
+          default_employee_cap: number
+          default_max_order: number
+          default_min_order: number
+          default_rate: number
+          email_on_publish: boolean
+          id: boolean
+          sms_before_cutoff: boolean
+          terms: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "app_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_batch_status: {
         Args: {
           p_batch_no: string
@@ -709,6 +750,26 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      set_employee_active: {
+        Args: { p_active: boolean; p_id: string }
+        Returns: {
+          active: boolean
+          company_email: string
+          created_at: string
+          department: Database["public"]["Enums"]["department"]
+          id: string
+          name: string
+          phone: string
+          site: Database["public"]["Enums"]["site"]
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "employees"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       set_order_status: {
         Args: {
           p_order_no: string
@@ -731,6 +792,57 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      upsert_delivery_point: {
+        Args: {
+          p_active?: boolean
+          p_address: string
+          p_coordinator_name: string
+          p_id: string
+          p_name: string
+        }
+        Returns: {
+          active: boolean
+          address: string
+          coordinator_name: string
+          created_at: string
+          id: string
+          name: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "delivery_points"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      upsert_employee: {
+        Args: {
+          p_active?: boolean
+          p_department: Database["public"]["Enums"]["department"]
+          p_email: string
+          p_id: string
+          p_name: string
+          p_phone: string
+          p_site: Database["public"]["Enums"]["site"]
+        }
+        Returns: {
+          active: boolean
+          company_email: string
+          created_at: string
+          department: Database["public"]["Enums"]["department"]
+          id: string
+          name: string
+          phone: string
+          site: Database["public"]["Enums"]["site"]
+          user_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "employees"
           isOneToOne: true
           isSetofReturn: false
         }
