@@ -47,7 +47,8 @@ export const Route = createFileRoute("/app/orders")({
 });
 
 function OrdersPage() {
-  const { orders, employees, deliveryPoints, activeBatch, updateOrder, cancelOrder } = useAppData();
+  const { orders, employees, deliveryPoints, activeBatch, adjustOrder, cancelOrder } = useAppData();
+  const [busy, setBusy] = useState(false);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<string>("all");
   const [point, setPoint] = useState<string>("all");
