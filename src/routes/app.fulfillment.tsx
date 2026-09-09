@@ -155,6 +155,56 @@ function Fulfillment() {
           })}
         </div>
       )}
+
+      <Dialog open={!!handover} onOpenChange={(open) => !open && setHandover(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm handover</DialogTitle>
+            <DialogDescription>
+              A delivery coupon is issued for {handover?.orderNo} once you confirm who received the
+              milk.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="mb-2 block" htmlFor="receiver">
+                Received by
+              </Label>
+              <Input
+                id="receiver"
+                value={receiverName}
+                onChange={(e) => setReceiverName(e.target.value)}
+                placeholder="Full name of the person collecting"
+              />
+            </div>
+            <div>
+              <Label className="mb-2 block" htmlFor="remarks">
+                Remarks
+              </Label>
+              <Input
+                id="remarks"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Optional note"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHandover(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={busy || receiverName.trim().length < 2}
+              onClick={() => {
+                if (!handover) return;
+                void move(handover, "Delivered", receiverName.trim(), remarks.trim() || "—");
+              }}
+            >
+              {busy ? "Saving…" : "Confirm delivered"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
