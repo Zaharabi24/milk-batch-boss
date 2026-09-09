@@ -14,7 +14,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { Button } from "@/components/ui/button";
 import { useAppData } from "@/context/app-data";
 import { timeShort } from "@/lib/format";
-import logo from "@/assets/anwar-organic-logo.png";
+import logoAsset from "@/assets/anwar-organic-logo.png.asset.json";
 import type { Role } from "@/lib/types";
 
 export const Route = createFileRoute("/app")({
@@ -64,7 +64,7 @@ const linkClass =
 function Brand() {
   return (
     <Link to="/" className="flex items-center gap-2 px-2">
-      <img src={logo} alt="Anwar Organic" width={40} height={40} className="h-10 w-auto" />
+      <img src={logoAsset.url} alt="Anwar Organic" width={40} height={40} className="h-10 w-auto" />
       <span className="font-display text-lg font-extrabold">Anwar Fresh</span>
     </Link>
   );
