@@ -28,6 +28,11 @@ import logoAsset from "@/assets/anwar-organic-logo.png.asset.json";
 import type { Role } from "@/lib/types";
 
 export const Route = createFileRoute("/app")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/login" });
+  },
   component: AppShell,
 });
 
