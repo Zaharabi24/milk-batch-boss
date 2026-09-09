@@ -178,21 +178,30 @@ function OrdersPage() {
           <DialogFooter className="gap-2">
             <Button
               variant="outline"
-              onClick={() => {
+              disabled={busy}
+              onClick={async () => {
                 if (!editing) return;
                 if (!reason.trim()) {
                   toast.error("Please give a reason.");
                   return;
                 }
-                cancelOrder(editing.orderNo, reason.trim());
-                toast.success(`${editing.orderNo} cancelled`);
-                setEditing(null);
+                setBusy(true);
+                try {
+                  await cancelOrder(editing.orderNo, reason.trim());
+                  toast.success(`${editing.orderNo} cancelled`);
+                  setEditing(null);
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Could not cancel the order");
+                } finally {
+                  setBusy(false);
+                }
               }}
             >
               Cancel order
             </Button>
             <Button
-              onClick={() => {
+              disabled={busy}
+              onClick={async () => {
                 if (!editing) return;
                 if (!reason.trim()) {
                   toast.error("Please give a reason.");
@@ -202,9 +211,16 @@ function OrdersPage() {
                   toast.error("Litres must be at least 1.");
                   return;
                 }
-                updateOrder(editing.orderNo, { litres: editLitres }, reason.trim());
-                toast.success(`${editing.orderNo} updated`);
-                setEditing(null);
+                setBusy(true);
+                try {
+                  await adjustOrder(editing.orderNo, editLitres, reason.trim());
+                  toast.success(`${editing.orderNo} updated`);
+                  setEditing(null);
+                } catch (error) {
+                  toast.error(error instanceof Error ? error.message : "Could not update the order");
+                } finally {
+                  setBusy(false);
+                }
               }}
             >
               Save change
