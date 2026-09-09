@@ -1,4 +1,5 @@
 import type {
+  AppNotification,
   AuditLog,
   CollectionRecord,
   DailyMilkBatch,
@@ -268,5 +269,35 @@ export const auditLogs: AuditLog[] = [
     oldValue: "Active",
     newValue: "Closed",
     timestamp: atOffset(1, 18, 10),
+  },
+];
+
+export const notifications: AppNotification[] = [
+  {
+    id: "NT-003",
+    kind: "CutoffReminder",
+    audience: "All",
+    title: "Booking closes soon",
+    body: `Today's batch ${ACTIVE_BATCH_NO} stops accepting orders at the cut-off time.`,
+    timestamp: atOffset(0, 10, 0),
+    read: false,
+  },
+  {
+    id: "NT-002",
+    kind: "BatchPublished",
+    audience: "All",
+    title: "Fresh milk available today",
+    body: `Batch ${ACTIVE_BATCH_NO} is live — book your litres before the cut-off.`,
+    timestamp: atOffset(0, 8, 30),
+    read: false,
+  },
+  {
+    id: "NT-001",
+    kind: "PaymentDue",
+    audience: "Finance",
+    title: "Unpaid collections pending",
+    body: "Some delivered orders from earlier batches are still unpaid or partly paid.",
+    timestamp: atOffset(1, 17, 45),
+    read: true,
   },
 ];
