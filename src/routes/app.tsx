@@ -153,24 +153,27 @@ function AppShell() {
           </div>
 
           <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <span className="hidden sm:inline">Switch role</span>
-                  <span className="sm:hidden">Role</span>
-                  <ChevronDown className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Demo control — switch freely</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {allRoles.map((r) => (
-                  <DropdownMenuItem key={r} onSelect={() => setRole(r)}>
-                    {r}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {roles.length > 1 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <span className="hidden sm:inline">Switch view</span>
+                    <span className="sm:hidden">View</span>
+                    <ChevronDown className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Your access</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {roles.map((r) => (
+                    <DropdownMenuItem key={r} onSelect={() => setRole(r)}>
+                      {r}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
