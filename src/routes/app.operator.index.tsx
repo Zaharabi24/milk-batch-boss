@@ -80,14 +80,14 @@ function OperatorDashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setBatchStatus(activeBatch.batchNo, "Paused")}
+                onClick={() => void setBatchStatus(activeBatch.batchNo, "Paused").catch((e) => toast.error(e instanceof Error ? e.message : "Could not update the batch"))}
               >
                 Pause bookings
               </Button>
             ) : (
               <Button
                 size="sm"
-                onClick={() => setBatchStatus(activeBatch.batchNo, "Active")}
+                onClick={() => void setBatchStatus(activeBatch.batchNo, "Active").catch((e) => toast.error(e instanceof Error ? e.message : "Could not update the batch"))}
               >
                 Resume bookings
               </Button>
@@ -95,7 +95,7 @@ function OperatorDashboard() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setBatchStatus(activeBatch.batchNo, "Closed")}
+              onClick={() => void setBatchStatus(activeBatch.batchNo, "Closed").catch((e) => toast.error(e instanceof Error ? e.message : "Could not update the batch"))}
             >
               Close batch
             </Button>
