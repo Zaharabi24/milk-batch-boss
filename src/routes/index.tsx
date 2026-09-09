@@ -1,5 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useInView, animate, useReducedMotion } from "framer-motion";
+import logoAsset from "@/assets/anwar-organic-logo.jpg.asset.json";
 import { useEffect, useRef, useState } from "react";
 import {
   Factory,
@@ -57,7 +58,13 @@ function Nav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-        <span className="font-display text-lg font-extrabold tracking-tight">Anwar Fresh</span>
+        <img
+          src={logoAsset.url}
+          alt="Anwar Organic"
+          className="h-12 w-auto"
+          width={46}
+          height={48}
+        />
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a href="#how-it-works" className="hover:text-foreground">
             How it works
@@ -274,7 +281,13 @@ function Landing() {
 
       <footer className="border-t border-border py-10">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-5 text-sm text-muted-foreground">
-          <span className="font-display text-base font-bold text-foreground">Anwar Fresh</span>
+          <img
+            src={logoAsset.url}
+            alt="Anwar Organic"
+            className="h-10 w-auto"
+            width={38}
+            height={40}
+          />
           <span>An Anwar Agro Farms system</span>
           <span>© {new Date().getFullYear()} Anwar Group of Industries</span>
         </div>
