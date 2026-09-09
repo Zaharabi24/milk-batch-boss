@@ -108,27 +108,14 @@ function BatchWidget() {
         <span className="text-sm text-muted-foreground">৳92 / litre</span>
       </div>
 
-      <div className="mt-7 flex items-end gap-7">
-        <div className="relative isolate h-44 w-28 shrink-0" aria-hidden="true">
-          <div className="milk-ground-shadow" />
-          <div className="milk-glass">
-            <motion.div
-              className="milk-liquid"
-              animate={{ height: `${fill * 100}%` }}
-              transition={{ duration: reduce ? 0 : 1.4, ease: "easeInOut" }}
-            >
-              <motion.div
-                className="milk-surface"
-                animate={reduce ? {} : { x: [0, 5, 0, -5, 0], rotate: [-0.5, 0.8, -0.5] }}
-                transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <div className="milk-depth" />
-            </motion.div>
-            <div className="glass-highlight glass-highlight-main" />
-            <div className="glass-highlight glass-highlight-soft" />
-            <div className="glass-rim" />
-            <div className="glass-base" />
-          </div>
+      <div className="mt-6 flex items-end gap-6">
+        <div className="relative h-40 w-24 overflow-hidden rounded-b-[2.5rem] rounded-t-lg border-2 border-primary/40 bg-secondary">
+          <div className="absolute inset-x-7 -top-3 h-4 rounded-t-md border-2 border-b-0 border-primary/40 bg-secondary" />
+          <motion.div
+            className="absolute inset-x-0 bottom-0 bg-primary/80"
+            animate={{ height: `${fill * 100}%` }}
+            transition={{ duration: reduce ? 0 : 1.4, ease: "easeInOut" }}
+          />
         </div>
         <div>
           <p className="text-sm text-muted-foreground">Litres remaining</p>
