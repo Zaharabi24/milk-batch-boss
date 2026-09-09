@@ -57,13 +57,13 @@ function useCountUp(target: number, start: boolean, duration = 1.6) {
 function Nav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-20 max-w-6xl items-center justify-between px-5">
+      <div className="mx-auto flex h-24 max-w-6xl items-center justify-between px-5 py-3">
         <img
           src={logoAsset.url}
           alt="Anwar Organic"
-          className="h-20 w-auto"
-          width={78}
-          height={80}
+          className="h-18 w-auto"
+          width={70}
+          height={72}
         />
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a href="#how-it-works" className="hover:text-foreground">
