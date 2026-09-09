@@ -44,9 +44,9 @@ function Coupons() {
       />
 
       <div className="mb-8 grid gap-4 sm:grid-cols-3">
-        <StatCard label="Coupons issued" value={String(deliveryRecords.length)} />
-        <StatCard label="Litres handed over" value={litres(totalLitres)} />
-        <StatCard label="Collection points" value={String(points)} />
+        <StatCard label="Coupons issued" value={deliveryRecords.length} />
+        <StatCard label="Litres handed over" value={totalLitres} format={litres} />
+        <StatCard label="Collection points" value={points} />
       </div>
 
       {deliveryRecords.length === 0 ? (
