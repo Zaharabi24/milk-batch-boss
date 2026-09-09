@@ -16,6 +16,7 @@ import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppCollectionsRouteImport } from './routes/app.collections'
 import { Route as AppFulfillmentRouteImport } from './routes/app.fulfillment'
 import { Route as AppMyOrdersRouteImport } from './routes/app.my-orders'
+import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppOfferRouteImport } from './routes/app.offer'
 import { Route as AppOrdersRouteImport } from './routes/app.orders'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
@@ -62,6 +63,11 @@ const AppFulfillmentRoute = AppFulfillmentRouteImport.update({
 const AppMyOrdersRoute = AppMyOrdersRouteImport.update({
   id: '/my-orders',
   path: '/my-orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOfferRoute = AppOfferRouteImport.update({
@@ -133,6 +139,7 @@ export interface FileRoutesByFullPath {
   '/app/collections': typeof AppCollectionsRoute
   '/app/fulfillment': typeof AppFulfillmentRoute
   '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/offer': typeof AppOfferRoute
   '/app/orders': typeof AppOrdersRoute
   '/app/reports': typeof AppReportsRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/app/collections': typeof AppCollectionsRoute
   '/app/fulfillment': typeof AppFulfillmentRoute
   '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/offer': typeof AppOfferRoute
   '/app/orders': typeof AppOrdersRoute
   '/app/reports': typeof AppReportsRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/app/collections': typeof AppCollectionsRoute
   '/app/fulfillment': typeof AppFulfillmentRoute
   '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/offer': typeof AppOfferRoute
   '/app/orders': typeof AppOrdersRoute
   '/app/reports': typeof AppReportsRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/app/collections'
     | '/app/fulfillment'
     | '/app/my-orders'
+    | '/app/notifications'
     | '/app/offer'
     | '/app/orders'
     | '/app/reports'
@@ -218,6 +228,7 @@ export interface FileRouteTypes {
     | '/app/collections'
     | '/app/fulfillment'
     | '/app/my-orders'
+    | '/app/notifications'
     | '/app/offer'
     | '/app/orders'
     | '/app/reports'
@@ -239,6 +250,7 @@ export interface FileRouteTypes {
     | '/app/collections'
     | '/app/fulfillment'
     | '/app/my-orders'
+    | '/app/notifications'
     | '/app/offer'
     | '/app/orders'
     | '/app/reports'
@@ -309,6 +321,13 @@ declare module '@tanstack/react-router' {
       path: '/my-orders'
       fullPath: '/app/my-orders'
       preLoaderRoute: typeof AppMyOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/notifications': {
+      id: '/app/notifications'
+      path: '/notifications'
+      fullPath: '/app/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/offer': {
@@ -402,6 +421,7 @@ interface AppRouteChildren {
   AppCollectionsRoute: typeof AppCollectionsRoute
   AppFulfillmentRoute: typeof AppFulfillmentRoute
   AppMyOrdersRoute: typeof AppMyOrdersRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppOfferRoute: typeof AppOfferRoute
   AppOrdersRoute: typeof AppOrdersRoute
   AppReportsRoute: typeof AppReportsRoute
@@ -421,6 +441,7 @@ const AppRouteChildren: AppRouteChildren = {
   AppCollectionsRoute: AppCollectionsRoute,
   AppFulfillmentRoute: AppFulfillmentRoute,
   AppMyOrdersRoute: AppMyOrdersRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppOfferRoute: AppOfferRoute,
   AppOrdersRoute: AppOrdersRoute,
   AppReportsRoute: AppReportsRoute,
