@@ -131,7 +131,7 @@ function Fulfillment() {
                         <div className="flex items-center gap-2">
                           <OrderStatusBadge status={o.status} />
                           {nextStatus[o.status] ? (
-                            <Button size="sm" onClick={() => advance(o)}>
+                            <Button size="sm" disabled={busy} onClick={() => advance(o)}>
                               {nextLabel[o.status]}
                             </Button>
                           ) : null}
@@ -139,10 +139,8 @@ function Fulfillment() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
-                                updateOrder(o.orderNo, { status: "NotCollected" }, "Not collected at counter");
-                                toast.message(`${o.orderNo} marked not collected`);
-                              }}
+                              disabled={busy}
+                              onClick={() => void move(o, "NotCollected")}
                             >
                               Not collected
                             </Button>
