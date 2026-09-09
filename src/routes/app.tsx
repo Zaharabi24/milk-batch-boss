@@ -101,7 +101,10 @@ function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => 
 }
 
 function AppShell() {
-  const { role, setRole, notifications, unreadCount, markNotificationsRead } = useAppData();
+  const { role, roles, setRole, notifications, unreadCount, markNotificationsRead } = useAppData();
+  const { user, employee, signOut } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = navByRole[role];
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -109,6 +112,14 @@ function AppShell() {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await signOut();
+    void navigate({ to: "/login", replace: true });
+  }
+
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
