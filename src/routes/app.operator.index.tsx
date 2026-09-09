@@ -8,6 +8,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
