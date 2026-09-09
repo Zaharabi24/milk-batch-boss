@@ -61,9 +61,9 @@ function Nav() {
         <img
           src={logoAsset.url}
           alt="Anwar Organic"
-          className="h-18 w-auto"
-          width={70}
-          height={72}
+          className="h-20 w-auto"
+          width={78}
+          height={80}
         />
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a href="#how-it-works" className="hover:text-foreground">
