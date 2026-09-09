@@ -57,7 +57,7 @@ function useCountUp(target: number, start: boolean, duration = 1.6) {
 function Nav() {
   return (
     <header className="sticky top-0 z-50 border-b border-border bg-background/85 backdrop-blur">
-      <div className="mx-auto flex h-24 max-w-6xl items-center justify-between px-5 py-3">
+      <div className="mx-auto flex h-28 max-w-6xl items-center justify-between px-5">
         <img
           src={logoAsset.url}
           alt="Anwar Organic"
