@@ -179,7 +179,10 @@ function OrdersPage() {
               variant="outline"
               onClick={() => {
                 if (!editing) return;
-                if (!reason.trim()) return toast.error("Please give a reason.");
+                if (!reason.trim()) {
+                  toast.error("Please give a reason.");
+                  return;
+                }
                 cancelOrder(editing.orderNo, reason.trim());
                 toast.success(`${editing.orderNo} cancelled`);
                 setEditing(null);
