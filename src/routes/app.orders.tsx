@@ -193,8 +193,14 @@ function OrdersPage() {
             <Button
               onClick={() => {
                 if (!editing) return;
-                if (!reason.trim()) return toast.error("Please give a reason.");
-                if (editLitres < 1) return toast.error("Litres must be at least 1.");
+                if (!reason.trim()) {
+                  toast.error("Please give a reason.");
+                  return;
+                }
+                if (editLitres < 1) {
+                  toast.error("Litres must be at least 1.");
+                  return;
+                }
                 updateOrder(editing.orderNo, { litres: editLitres }, reason.trim());
                 toast.success(`${editing.orderNo} updated`);
                 setEditing(null);
