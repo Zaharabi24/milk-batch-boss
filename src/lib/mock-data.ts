@@ -206,14 +206,16 @@ export const orders: Order[] = [...todayOrders, ...historyOrders];
 export const deliveryRecords: DeliveryRecord[] = historyOrders
   .filter((o) => o.status === "Delivered")
   .slice(0, 12)
-  .map((o) => {
+  .map((o, i) => {
     const emp = employees.find((e) => e.id === o.employeeId)!;
     return {
+      couponNo: `DC-${2400 + i}`,
       orderNo: o.orderNo,
       recipientName: emp.name,
       contact: emp.phone,
       dateTime: o.createdAt,
       location: deliveryPoints.find((d) => d.id === o.deliveryPointId)!.name,
+      floor: o.deliveryPointId === "dp-gulshan" ? `Floor ${3 + (i % 6)}` : "Factory store",
       quantity: o.litres,
       receiverName: emp.name,
       remarks: "Collected on time",
