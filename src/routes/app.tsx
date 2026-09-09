@@ -1,7 +1,17 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  redirect,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Bell, ChevronDown, Menu } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Bell, ChevronDown, LogOut, Menu } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,6 +28,11 @@ import logoAsset from "@/assets/anwar-organic-logo.png.asset.json";
 import type { Role } from "@/lib/types";
 
 export const Route = createFileRoute("/app")({
+  ssr: false,
+  beforeLoad: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw redirect({ to: "/login" });
+  },
   component: AppShell,
 });
 
@@ -86,7 +101,10 @@ function NavLinks({ items, onNavigate }: { items: NavItem[]; onNavigate?: () => 
 }
 
 function AppShell() {
-  const { role, setRole, notifications, unreadCount, markNotificationsRead } = useAppData();
+  const { role, roles, setRole, notifications, unreadCount, markNotificationsRead } = useAppData();
+  const { user, employee, signOut } = useAuth();
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const items = navByRole[role];
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -94,6 +112,14 @@ function AppShell() {
   useEffect(() => {
     setMobileOpen(false);
   }, [pathname]);
+
+  async function handleSignOut() {
+    await queryClient.cancelQueries();
+    queryClient.clear();
+    await signOut();
+    void navigate({ to: "/login", replace: true });
+  }
+
 
   return (
     <div className="flex min-h-screen bg-background text-foreground">
@@ -127,24 +153,27 @@ function AppShell() {
           </div>
 
           <div className="flex items-center gap-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <span className="hidden sm:inline">Switch role</span>
-                  <span className="sm:hidden">Role</span>
-                  <ChevronDown className="size-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Demo control — switch freely</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {allRoles.map((r) => (
-                  <DropdownMenuItem key={r} onSelect={() => setRole(r)}>
-                    {r}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {roles.length > 1 ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <span className="hidden sm:inline">Switch view</span>
+                    <span className="sm:hidden">View</span>
+                    <ChevronDown className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel>Your access</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {roles.map((r) => (
+                    <DropdownMenuItem key={r} onSelect={() => setRole(r)}>
+                      {r}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : null}
+
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -195,6 +224,29 @@ function AppShell() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
                   <Link to="/app/notifications">View all notifications</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="max-w-[10rem] truncate">
+                  <span className="truncate">{employee?.name ?? user?.email ?? "Account"}</span>
+                  <ChevronDown className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel className="truncate font-normal">
+                  <span className="block font-medium">{employee?.name ?? "Not linked yet"}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {user?.email}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{role}</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => void handleSignOut()}>
+                  <LogOut className="size-4" />
+                  Sign out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

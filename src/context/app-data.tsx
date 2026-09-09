@@ -1,15 +1,9 @@
-import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from "react";
-import {
-  activeBatch as seedActiveBatch,
-  auditLogs as seedAudit,
-  batches as seedBatches,
-  collections as seedCollections,
-  deliveryPoints as seedPoints,
-  deliveryRecords as seedDeliveries,
-  employees as seedEmployees,
-  notifications as seedNotifications,
-  orders as seedOrders,
-} from "@/lib/mock-data";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { createContext, useCallback, useContext, useEffect, useMemo, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import * as api from "@/lib/api";
+import type { AppSettings, BatchStats, NewBatchInput, Snapshot } from "@/lib/api";
+import { useAuth } from "@/context/auth";
 import type {
   AppNotification,
   AuditLog,
@@ -19,15 +13,41 @@ import type {
   DeliveryPoint,
   DeliveryRecord,
   Employee,
-  NotificationKind,
   Order,
+  OrderStatus,
   Role,
 } from "@/lib/types";
 
+const EMPTY: Snapshot = {
+  employees: [],
+  batches: [],
+  deliveryPoints: [],
+  orders: [],
+  deliveryRecords: [],
+  collections: [],
+  auditLogs: [],
+  notifications: [],
+  settings: null,
+  batchStats: [],
+};
+
+const FALLBACK_EMPLOYEE: Employee = {
+  id: "—",
+  name: "Your account",
+  companyEmail: "",
+  phone: "",
+  department: "Admin",
+  site: "Head Office – Gulshan",
+  active: true,
+};
+
 interface AppData {
+  loading: boolean;
   role: Role;
+  roles: Role[];
   setRole: (r: Role) => void;
   currentEmployee: Employee;
+  isLinkedEmployee: boolean;
   employees: Employee[];
   batches: DailyMilkBatch[];
   activeBatch: DailyMilkBatch | undefined;
@@ -37,285 +57,145 @@ interface AppData {
   collections: CollectionRecord[];
   auditLogs: AuditLog[];
   notifications: AppNotification[];
+  batchStats: BatchStats[];
+  settings: AppSettings | null;
   unreadCount: number;
-  notify: (n: {
-    kind: NotificationKind;
-    audience: Role | "All";
-    title: string;
-    body: string;
-  }) => void;
-  markNotificationsRead: () => void;
+  refresh: () => Promise<void>;
+  markNotificationsRead: () => Promise<void>;
   remainingLitres: (batchNo: string) => number;
-  addAudit: (entry: Omit<AuditLog, "id" | "timestamp">) => void;
-  setBatchStatus: (batchNo: string, status: BatchStatus) => void;
-  addBatch: (batch: DailyMilkBatch) => void;
+  setBatchStatus: (batchNo: string, status: BatchStatus) => Promise<void>;
+  addBatch: (input: NewBatchInput) => Promise<DailyMilkBatch>;
   confirmOrder: (input: {
-    employeeId: string;
     batchNo: string;
     litres: number;
     deliveryPointId: string;
-  }) => Order | null;
-  cancelOrder: (orderNo: string, reason: string) => void;
-  updateOrder: (orderNo: string, patch: Partial<Order>, reason: string) => void;
-  addDeliveryRecord: (record: DeliveryRecord) => void;
-  upsertCollection: (record: CollectionRecord) => void;
-  setEmployees: (list: Employee[]) => void;
-  setDeliveryPoints: (list: DeliveryPoint[]) => void;
+  }) => Promise<Order>;
+  cancelOrder: (orderNo: string, reason: string) => Promise<void>;
+  adjustOrder: (orderNo: string, litres: number, reason: string) => Promise<void>;
+  setOrderStatus: (
+    orderNo: string,
+    status: OrderStatus,
+    receiverName?: string,
+    remarks?: string,
+  ) => Promise<void>;
+  recordCollection: (input: {
+    orderNo: string;
+    amountCollected: number;
+    method: NonNullable<CollectionRecord["method"]>;
+    reference: string;
+  }) => Promise<void>;
+  upsertEmployee: (employee: Employee) => Promise<void>;
+  setEmployeeActive: (id: string, active: boolean) => Promise<void>;
+  upsertDeliveryPoint: (point: DeliveryPoint) => Promise<void>;
+  saveSettings: (settings: AppSettings) => Promise<void>;
 }
 
 const Ctx = createContext<AppData | null>(null);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
-  const [role, setRole] = useState<Role>("Employee");
-  const [employees, setEmployees] = useState<Employee[]>(seedEmployees);
-  const [batches, setBatches] = useState<DailyMilkBatch[]>(seedBatches);
-  const [deliveryPoints, setDeliveryPoints] = useState<DeliveryPoint[]>(seedPoints);
-  const [orders, setOrders] = useState<Order[]>(seedOrders);
-  const [deliveryRecords, setDeliveryRecords] = useState<DeliveryRecord[]>(seedDeliveries);
-  const [collections, setCollections] = useState<CollectionRecord[]>(seedCollections);
-  const [auditLogs, setAuditLogs] = useState<AuditLog[]>(seedAudit);
-  const [notifications, setNotifications] = useState<AppNotification[]>(seedNotifications);
+  const { session, employee, role, roles, setActiveRole, refreshProfile } = useAuth();
+  const queryClient = useQueryClient();
+  const signedIn = !!session;
 
-  const notify = useCallback<AppData["notify"]>((n) => {
-    setNotifications((prev) => [
-      {
-        ...n,
-        id: `NT-${Date.now()}-${prev.length}`,
-        timestamp: new Date().toISOString(),
-        read: false,
-      },
-      ...prev,
-    ]);
-  }, []);
+  const query = useQuery({
+    queryKey: ["snapshot", session?.user.id ?? "anon"],
+    queryFn: api.fetchSnapshot,
+    enabled: signedIn,
+    staleTime: 15_000,
+  });
 
-  const markNotificationsRead = useCallback(() => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  }, []);
+  const refresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["snapshot"] });
+  }, [queryClient]);
 
-  // Demo persona for the Employee role: Ayesha Siddika (HR, Head Office).
-  const currentEmployee = employees.find((e) => e.id === "EMP-1006") ?? seedEmployees[0]!;
+  // Live updates: any change to the core tables refreshes the workspace.
+  useEffect(() => {
+    if (!signedIn) return;
+    const channel = supabase
+      .channel("anwar-fresh-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => void refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "batches" }, () => void refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "collections" }, () => void refresh())
+      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, () => void refresh())
+      .subscribe();
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [signedIn, refresh]);
 
-  const addAudit = useCallback((entry: Omit<AuditLog, "id" | "timestamp">) => {
-    setAuditLogs((prev) => [
-      { ...entry, id: `AL-${Date.now()}`, timestamp: new Date().toISOString() },
-      ...prev,
-    ]);
-  }, []);
+  const data = query.data ?? EMPTY;
 
   const remainingLitres = useCallback(
     (batchNo: string) => {
-      const batch = batches.find((b) => b.batchNo === batchNo) ?? seedActiveBatch;
-      const booked = orders
+      const stats = data.batchStats.find((s) => s.batch_no === batchNo);
+      if (stats?.remaining_litres != null) return stats.remaining_litres;
+      const batch = data.batches.find((b) => b.batchNo === batchNo);
+      if (!batch) return 0;
+      const booked = data.orders
         .filter((o) => o.batchNo === batchNo && o.status !== "Cancelled")
         .reduce((sum, o) => sum + o.litres, 0);
       return Math.max(0, batch.saleableLitres - booked);
     },
-    [batches, orders],
+    [data],
   );
 
-  const setBatchStatus = useCallback(
-    (batchNo: string, status: BatchStatus) => {
-      setBatches((prev) =>
-        prev.map((b) => {
-          if (b.batchNo !== batchNo) return b;
-          addAudit({
-            user: role,
-            action: "Changed batch status",
-            record: batchNo,
-            oldValue: b.status,
-            newValue: status,
-          });
-          if (status === "Active") {
-            notify({
-              kind: "BatchPublished",
-              audience: "All",
-              title: "Fresh milk available today",
-              body: `Batch ${batchNo} is live at ৳${b.ratePerLitre}/L — book before the cut-off.`,
-            });
-          }
-          return { ...b, status };
-        }),
-      );
+  const run = useCallback(
+    async <T,>(fn: () => Promise<T>) => {
+      const result = await fn();
+      await refresh();
+      return result;
     },
-    [addAudit, notify, role],
+    [refresh],
   );
 
-  const addBatch = useCallback(
-    (batch: DailyMilkBatch) => {
-      setBatches((prev) => [batch, ...prev]);
-      addAudit({
-        user: role,
-        action: "Created batch",
-        record: batch.batchNo,
-        oldValue: "—",
-        newValue: "Draft",
-      });
-    },
-    [addAudit, role],
-  );
-
-  const confirmOrder: AppData["confirmOrder"] = useCallback(
-    ({ employeeId, batchNo, litres, deliveryPointId }) => {
-      const batch = batches.find((b) => b.batchNo === batchNo);
-      if (!batch || batch.status !== "Active") return null;
-      if (remainingLitres(batchNo) < litres) return null;
-      const existing = orders.find(
-        (o) => o.employeeId === employeeId && o.batchNo === batchNo && o.status !== "Cancelled",
-      );
-      if (existing) return null;
-      const order: Order = {
-        orderNo: `ORD-${8800 + orders.length + 1}`,
-        employeeId,
-        batchNo,
-        litres,
-        rate: batch.ratePerLitre,
-        amount: litres * batch.ratePerLitre,
-        deliveryPointId,
-        status: "Confirmed",
-        createdAt: new Date().toISOString(),
-      };
-      setOrders((prev) => [order, ...prev]);
-      addAudit({
-        user: employeeId,
-        action: "Confirmed order",
-        record: order.orderNo,
-        oldValue: "—",
-        newValue: `${litres} L`,
-      });
-      notify({
-        kind: "OrderConfirmed",
-        audience: "Employee",
-        title: `Order ${order.orderNo} confirmed`,
-        body: `${litres} L reserved for ${batch.deliveryDate}, ${batch.deliveryWindow}.`,
-      });
-      return order;
-    },
-    [addAudit, batches, notify, orders, remainingLitres],
-  );
-
-  const cancelOrder = useCallback(
-    (orderNo: string, reason: string) => {
-      setOrders((prev) =>
-        prev.map((o) => (o.orderNo === orderNo ? { ...o, status: "Cancelled" as const } : o)),
-      );
-      addAudit({
-        user: role,
-        action: `Cancelled order — ${reason}`,
-        record: orderNo,
-        oldValue: "Confirmed",
-        newValue: "Cancelled",
-      });
-      notify({
-        kind: "OrderCancelled",
-        audience: "Employee",
-        title: `Order ${orderNo} cancelled`,
-        body: `Reason: ${reason}. The litres are back in the pool.`,
-      });
-    },
-    [addAudit, notify, role],
-  );
-
-  const updateOrder = useCallback(
-    (orderNo: string, patch: Partial<Order>, reason: string) => {
-      setOrders((prev) =>
-        prev.map((o) => {
-          if (o.orderNo !== orderNo) return o;
-          const next = { ...o, ...patch };
-          next.amount = next.litres * next.rate;
-          addAudit({
-            user: role,
-            action: `Adjusted order — ${reason}`,
-            record: orderNo,
-            oldValue: `${o.litres} L / ${o.status}`,
-            newValue: `${next.litres} L / ${next.status}`,
-          });
-          if (patch.status === "OutForDelivery") {
-            notify({
-              kind: "OutForDelivery",
-              audience: "Employee",
-              title: `Order ${orderNo} is on the way`,
-              body: "Your milk has left the store — please collect it from your delivery point.",
-            });
-          }
-          return next;
-        }),
-      );
-    },
-    [addAudit, notify, role],
-  );
-
-  const addDeliveryRecord = useCallback((record: DeliveryRecord) => {
-    setDeliveryRecords((prev) => [record, ...prev]);
-  }, []);
-
-  const upsertCollection = useCallback(
-    (record: CollectionRecord) => {
-      setCollections((prev) => [record, ...prev.filter((c) => c.orderNo !== record.orderNo)]);
-      if (record.status !== "Paid") {
-        notify({
-          kind: "PaymentDue",
-          audience: "Finance",
-          title: `Payment outstanding on ${record.orderNo}`,
-          body: `৳${Math.round(record.amountDue - record.amountCollected)} still to be collected.`,
-        });
-      }
-    },
-    [notify],
-  );
-
-  const value = useMemo<AppData>(
-    () => ({
+  const value = useMemo<AppData>(() => {
+    return {
+      loading: query.isLoading,
       role,
-      setRole,
-      currentEmployee,
-      employees,
-      batches,
-      activeBatch: batches.find((b) => b.status === "Active" || b.status === "Paused"),
-      deliveryPoints,
-      orders,
-      deliveryRecords,
-      collections,
-      auditLogs,
-      notifications,
-      unreadCount: notifications.filter((n) => !n.read).length,
-      notify,
-      markNotificationsRead,
+      roles,
+      setRole: setActiveRole,
+      currentEmployee: employee ?? FALLBACK_EMPLOYEE,
+      isLinkedEmployee: !!employee,
+      employees: data.employees,
+      batches: data.batches,
+      activeBatch: data.batches.find(
+        (b) => b.status === "Active" || b.status === "Paused" || b.status === "SoldOut",
+      ),
+      deliveryPoints: data.deliveryPoints,
+      orders: data.orders,
+      deliveryRecords: data.deliveryRecords,
+      collections: data.collections,
+      auditLogs: data.auditLogs,
+      notifications: data.notifications,
+      batchStats: data.batchStats,
+      settings: data.settings,
+      unreadCount: data.notifications.filter((n) => !n.read).length,
+      refresh,
       remainingLitres,
-      addAudit,
-      setBatchStatus,
-      addBatch,
-      confirmOrder,
-      cancelOrder,
-      updateOrder,
-      addDeliveryRecord,
-      upsertCollection,
-      setEmployees,
-      setDeliveryPoints,
-    }),
-    [
-      role,
-      currentEmployee,
-      employees,
-      batches,
-      deliveryPoints,
-      orders,
-      deliveryRecords,
-      collections,
-      auditLogs,
-      notifications,
-      notify,
-      markNotificationsRead,
-      remainingLitres,
-      addAudit,
-      setBatchStatus,
-      addBatch,
-      confirmOrder,
-      cancelOrder,
-      updateOrder,
-      addDeliveryRecord,
-      upsertCollection,
-    ],
-  );
+      markNotificationsRead: () => run(api.markNotificationsRead).then(() => undefined),
+      setBatchStatus: (batchNo, status) =>
+        run(() => api.setBatchStatus(batchNo, status)).then(() => undefined),
+      addBatch: (input) => run(() => api.createBatch(input)),
+      confirmOrder: (input) => run(() => api.confirmOrder(input)),
+      cancelOrder: (orderNo, reason) =>
+        run(() => api.cancelOrder(orderNo, reason)).then(() => undefined),
+      adjustOrder: (orderNo, litres, reason) =>
+        run(() => api.adjustOrder(orderNo, litres, reason)).then(() => undefined),
+      setOrderStatus: (orderNo, status, receiverName, remarks) =>
+        run(() => api.setOrderStatus(orderNo, status, receiverName, remarks)).then(() => undefined),
+      recordCollection: (input) => run(() => api.recordCollection(input)).then(() => undefined),
+      upsertEmployee: (emp) =>
+        run(async () => {
+          await api.upsertEmployee(emp);
+          await refreshProfile().catch(() => undefined);
+        }).then(() => undefined),
+      setEmployeeActive: (id, active) =>
+        run(() => api.setEmployeeActive(id, active)).then(() => undefined),
+      upsertDeliveryPoint: (point) =>
+        run(() => api.upsertDeliveryPoint(point)).then(() => undefined),
+      saveSettings: (settings) => run(() => api.saveSettings(settings)).then(() => undefined),
+    };
+  }, [query.isLoading, role, roles, setActiveRole, employee, data, refresh, remainingLitres, run, refreshProfile]);
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

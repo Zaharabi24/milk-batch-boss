@@ -1,7 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { OrderStatusBadge } from "@/components/status-badge";
 import { useAppData } from "@/context/app-data";
@@ -33,41 +44,43 @@ export const Route = createFileRoute("/app/fulfillment")({
 });
 
 function Fulfillment() {
-  const {
-    orders,
-    employees,
-    deliveryPoints,
-    activeBatch,
-    updateOrder,
-    addDeliveryRecord,
-    deliveryRecords,
-  } = useAppData();
+  const { orders, employees, deliveryPoints, activeBatch, setOrderStatus } = useAppData();
+  const [handover, setHandover] = useState<Order | null>(null);
+  const [receiverName, setReceiverName] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const todays = orders.filter(
     (o) => (!activeBatch || o.batchNo === activeBatch.batchNo) && o.status !== "Cancelled",
   );
 
+  async function move(order: Order, status: OrderStatus, receiver?: string, note?: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await setOrderStatus(order.orderNo, status, receiver, note);
+      toast.success(
+        `${order.orderNo} → ${status === "OutForDelivery" ? "out for delivery" : status === "NotCollected" ? "not collected" : status.toLowerCase()}`,
+      );
+      setHandover(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update the order");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function advance(order: Order) {
     const next = nextStatus[order.status];
     if (!next) return;
-    updateOrder(order.orderNo, { status: next }, "Fulfillment update");
     if (next === "Delivered") {
       const emp = employees.find((e) => e.id === order.employeeId);
-      const point = deliveryPoints.find((p) => p.id === order.deliveryPointId);
-      addDeliveryRecord({
-        couponNo: `DC-${2500 + deliveryRecords.length}`,
-        orderNo: order.orderNo,
-        recipientName: emp?.name ?? order.employeeId,
-        contact: emp?.phone ?? "—",
-        dateTime: new Date().toISOString(),
-        location: point?.name ?? "—",
-        floor: point?.id === "dp-gulshan" ? "Ground floor lobby" : "Factory store",
-        quantity: order.litres,
-        receiverName: emp?.name ?? order.employeeId,
-        remarks: "Handed over at counter",
-      });
+      setReceiverName(emp?.name ?? "");
+      setRemarks("");
+      setHandover(order);
+      return;
     }
-    toast.success(`${order.orderNo} → ${next === "OutForDelivery" ? "out for delivery" : next.toLowerCase()}`);
+    void move(order, next);
   }
 
   const groups = deliveryPoints
@@ -118,7 +131,7 @@ function Fulfillment() {
                         <div className="flex items-center gap-2">
                           <OrderStatusBadge status={o.status} />
                           {nextStatus[o.status] ? (
-                            <Button size="sm" onClick={() => advance(o)}>
+                            <Button size="sm" disabled={busy} onClick={() => advance(o)}>
                               {nextLabel[o.status]}
                             </Button>
                           ) : null}
@@ -126,10 +139,8 @@ function Fulfillment() {
                             <Button
                               size="sm"
                               variant="outline"
-                              onClick={() => {
-                                updateOrder(o.orderNo, { status: "NotCollected" }, "Not collected at counter");
-                                toast.message(`${o.orderNo} marked not collected`);
-                              }}
+                              disabled={busy}
+                              onClick={() => void move(o, "NotCollected")}
                             >
                               Not collected
                             </Button>
@@ -144,6 +155,56 @@ function Fulfillment() {
           })}
         </div>
       )}
+
+      <Dialog open={!!handover} onOpenChange={(open) => !open && setHandover(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm handover</DialogTitle>
+            <DialogDescription>
+              A delivery coupon is issued for {handover?.orderNo} once you confirm who received the
+              milk.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label className="mb-2 block" htmlFor="receiver">
+                Received by
+              </Label>
+              <Input
+                id="receiver"
+                value={receiverName}
+                onChange={(e) => setReceiverName(e.target.value)}
+                placeholder="Full name of the person collecting"
+              />
+            </div>
+            <div>
+              <Label className="mb-2 block" htmlFor="remarks">
+                Remarks
+              </Label>
+              <Input
+                id="remarks"
+                value={remarks}
+                onChange={(e) => setRemarks(e.target.value)}
+                placeholder="Optional note"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setHandover(null)}>
+              Cancel
+            </Button>
+            <Button
+              disabled={busy || receiverName.trim().length < 2}
+              onClick={() => {
+                if (!handover) return;
+                void move(handover, "Delivered", receiverName.trim(), remarks.trim() || "—");
+              }}
+            >
+              {busy ? "Saving…" : "Confirm delivered"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

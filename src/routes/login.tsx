@@ -1,32 +1,68 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { useAppData } from "@/context/app-data";
-import type { Role } from "@/lib/types";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useAuth } from "@/context/auth";
 
 export const Route = createFileRoute("/login")({
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Sign in — Anwar Fresh" },
-      { name: "description", content: "Sign in with your Anwar Group account to book today's milk batch." },
+      {
+        name: "description",
+        content: "Sign in with your Anwar Group account to book today's milk batch.",
+      },
       { property: "og:title", content: "Sign in — Anwar Fresh" },
-      { property: "og:description", content: "Company sign-in for the Anwar Fresh milk ordering system." },
+      {
+        property: "og:description",
+        content: "Company sign-in for the Anwar Fresh milk ordering system.",
+      },
     ],
   }),
   component: LoginPage,
 });
 
-const roles: Array<{ role: Role; to: string }> = [
-  { role: "Employee", to: "/app/offer" },
-  { role: "Factory Operator", to: "/app/operator" },
-  { role: "Head Office Coordinator", to: "/app/orders" },
-  { role: "Finance", to: "/app/collections" },
-  { role: "System Admin", to: "/app/admin/employees" },
-];
-
 function LoginPage() {
-  const { setRole } = useAppData();
+  const { session, loading, signIn, signUp } = useAuth();
   const navigate = useNavigate();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (!loading && session) void navigate({ to: "/app", replace: true });
+  }, [loading, session, navigate]);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (busy) return;
+    setBusy(true);
+    try {
+      if (mode === "signin") {
+        await signIn(email, password);
+        toast.success("Welcome back");
+        void navigate({ to: "/app", replace: true });
+      } else {
+        const { needsConfirmation } = await signUp(email, password);
+        if (needsConfirmation) {
+          toast.success("Check your inbox to confirm your email, then sign in.");
+          setMode("signin");
+        } else {
+          toast.success("Account created");
+          void navigate({ to: "/app", replace: true });
+        }
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Sign-in failed");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-5 py-12">
@@ -39,42 +75,56 @@ function LoginPage() {
         <Link to="/" className="font-display text-lg font-extrabold">
           Anwar Fresh
         </Link>
-        <h1 className="mt-6 text-2xl font-bold">Sign in to book your milk</h1>
+        <h1 className="mt-6 text-2xl font-bold">
+          {mode === "signin" ? "Sign in to book your milk" : "Create your account"}
+        </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Use your Anwar Group company account.
+          Use your Anwar Group company email address.
         </p>
 
-        <div className="mt-6 space-y-3">
-          <Button variant="outline" className="w-full justify-center" size="lg">
-            Continue with Microsoft
+        <form onSubmit={submit} className="mt-6 space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="email">Company email</Label>
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="name@anwargroup.com"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="password">Password</Label>
+            <Input
+              id="password"
+              type="password"
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+            />
+          </div>
+          <Button type="submit" size="lg" className="w-full" disabled={busy}>
+            {busy ? "Please wait…" : mode === "signin" ? "Sign in" : "Create account"}
           </Button>
-          <Button variant="outline" className="w-full justify-center" size="lg">
-            Continue with Google
-          </Button>
-        </div>
+        </form>
 
-        <div className="my-7 flex items-center gap-3 text-xs text-muted-foreground">
-          <span className="h-px flex-1 bg-border" />
-          Preview a role
-          <span className="h-px flex-1 bg-border" />
-        </div>
-
-        <div className="grid gap-2">
-          {roles.map(({ role, to }) => (
-            <button
-              key={role}
-              onClick={() => {
-                setRole(role);
-                navigate({ to });
-              }}
-              className="rounded-md border border-border bg-background px-4 py-2.5 text-left text-sm font-medium transition-colors hover:border-primary hover:bg-secondary"
-            >
-              {role}
-            </button>
-          ))}
-        </div>
+        <button
+          type="button"
+          className="mt-5 text-sm text-primary-deep hover:underline"
+          onClick={() => setMode(mode === "signin" ? "signup" : "signin")}
+        >
+          {mode === "signin"
+            ? "New here? Create an account"
+            : "Already have an account? Sign in"}
+        </button>
         <p className="mt-5 text-xs text-muted-foreground">
-          Demo preview — no real account is created and nothing is charged.
+          New accounts start as Employee. Ask a system administrator for operator, coordinator,
+          finance or admin access.
         </p>
       </motion.div>
     </div>

@@ -110,7 +110,7 @@ export interface CollectionRecord {
   orderNo: string;
   amountDue: number;
   amountCollected: number;
-  method: "Cash" | "bKash" | "Payroll deduction";
+  method: "Cash" | "bKash" | "Payroll deduction" | null;
   reference: string;
   status: "Paid" | "Unpaid" | "Partial";
   collectorName: string;
