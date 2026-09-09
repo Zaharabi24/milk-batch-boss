@@ -227,6 +227,29 @@ function AppShell() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="max-w-[10rem] truncate">
+                  <span className="truncate">{employee?.name ?? user?.email ?? "Account"}</span>
+                  <ChevronDown className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel className="truncate font-normal">
+                  <span className="block font-medium">{employee?.name ?? "Not linked yet"}</span>
+                  <span className="block truncate text-xs text-muted-foreground">
+                    {user?.email}
+                  </span>
+                  <span className="mt-1 block text-xs text-muted-foreground">{role}</span>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => void handleSignOut()}>
+                  <LogOut className="size-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
