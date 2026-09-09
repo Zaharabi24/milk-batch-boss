@@ -1,7 +1,17 @@
-import { createFileRoute, Link, Outlet, useRouterState } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Link,
+  Outlet,
+  redirect,
+  useNavigate,
+  useRouterState,
+} from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { Bell, ChevronDown, Menu } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
+import { Bell, ChevronDown, LogOut, Menu } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
