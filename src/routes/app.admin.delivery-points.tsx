@@ -38,46 +38,39 @@ const blank: DeliveryPoint = {
 };
 
 function DeliveryPointsPage() {
-  const { deliveryPoints, setDeliveryPoints, orders, addAudit, role } = useAppData();
+  const { deliveryPoints, orders, upsertDeliveryPoint } = useAppData();
   const [draft, setDraft] = useState<DeliveryPoint | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [busy, setBusy] = useState(false);
 
-  function save() {
-    if (!draft) return;
+  async function save() {
+    if (!draft || busy) return;
     if (!draft.name.trim() || !draft.address.trim()) {
       toast.error("Name and address are required.");
       return;
     }
-    if (isNew) {
-      const id = `dp-${draft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
-      setDeliveryPoints([...deliveryPoints, { ...draft, id }]);
-      addAudit({ user: role, action: "Added delivery point", record: id, oldValue: "—", newValue: draft.name });
-      toast.success(`${draft.name} added`);
-    } else {
-      setDeliveryPoints(deliveryPoints.map((p) => (p.id === draft.id ? draft : p)));
-      addAudit({
-        user: role,
-        action: "Edited delivery point",
-        record: draft.id,
-        oldValue: "Previous details",
-        newValue: draft.name,
-      });
-      toast.success(`${draft.name} updated`);
+    setBusy(true);
+    try {
+      const id = isNew
+        ? `dp-${draft.name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`
+        : draft.id;
+      await upsertDeliveryPoint({ ...draft, id });
+      toast.success(`${draft.name} ${isNew ? "added" : "updated"}`);
+      setDraft(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save the delivery point");
+    } finally {
+      setBusy(false);
     }
-    setDraft(null);
   }
 
-  function toggle(point: DeliveryPoint) {
-    setDeliveryPoints(
-      deliveryPoints.map((p) => (p.id === point.id ? { ...p, active: !p.active } : p)),
-    );
-    addAudit({
-      user: role,
-      action: point.active ? "Disabled delivery point" : "Enabled delivery point",
-      record: point.id,
-      oldValue: point.active ? "Active" : "Inactive",
-      newValue: point.active ? "Inactive" : "Active",
-    });
+  async function toggle(point: DeliveryPoint) {
+    try {
+      await upsertDeliveryPoint({ ...point, active: !point.active });
+      toast.success(`${point.name} ${point.active ? "disabled" : "enabled"}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update the delivery point");
+    }
   }
 
   return (
@@ -113,7 +106,7 @@ function DeliveryPointsPage() {
                   <p className="font-display text-lg font-bold">{p.name}</p>
                   <p className="mt-1 text-sm text-muted-foreground">{p.address}</p>
                 </div>
-                <Switch checked={p.active} onCheckedChange={() => toggle(p)} />
+                <Switch checked={p.active} onCheckedChange={() => void toggle(p)} />
               </div>
               <dl className="mt-4 grid grid-cols-2 gap-3 border-t border-border pt-4 text-sm">
                 <div>
@@ -166,7 +159,9 @@ function DeliveryPointsPage() {
             </div>
           ) : null}
           <DialogFooter>
-            <Button onClick={save}>Save</Button>
+            <Button onClick={() => void save()} disabled={busy}>
+              {busy ? "Saving…" : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
