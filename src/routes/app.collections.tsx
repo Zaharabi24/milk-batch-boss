@@ -85,33 +85,27 @@ function CollectionsPage() {
     setReference(existing?.reference ?? "");
   }
 
-  function save() {
-    if (!active) return;
+  async function save() {
+    if (!active || saving) return;
     if (amount < 0 || amount > active.amount) {
       toast.error(`Amount must be between ৳0 and ${taka(active.amount)}.`);
       return;
     }
-    const status: CollectionRecord["status"] =
-      amount === 0 ? "Unpaid" : amount >= active.amount ? "Paid" : "Partial";
-    upsertCollection({
-      orderNo: active.orderNo,
-      amountDue: active.amount,
-      amountCollected: amount,
-      method,
-      reference: reference.trim() || "—",
-      status,
-      collectorName: "Finance desk",
-      date: new Date().toISOString(),
-    });
-    addAudit({
-      user: role,
-      action: `Recorded payment — ${method}`,
-      record: active.orderNo,
-      oldValue: taka(collections.find((c) => c.orderNo === active.orderNo)?.amountCollected ?? 0),
-      newValue: taka(amount),
-    });
-    toast.success(`${active.orderNo} marked ${status.toLowerCase()}`);
-    setActive(null);
+    setSaving(true);
+    try {
+      await recordCollection({
+        orderNo: active.orderNo,
+        amountCollected: amount,
+        method,
+        reference: reference.trim() || "—",
+      });
+      toast.success(`Payment recorded for ${active.orderNo}`);
+      setActive(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not record the payment");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
