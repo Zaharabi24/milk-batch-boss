@@ -304,7 +304,6 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       auditLogs,
       notifications,
       notify,
-      notify,
       markNotificationsRead,
       remainingLitres,
       addAudit,
