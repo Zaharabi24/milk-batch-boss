@@ -37,11 +37,12 @@ export const Route = createFileRoute("/app/collections")({
   component: CollectionsPage,
 });
 
-type Method = CollectionRecord["method"];
+type Method = NonNullable<CollectionRecord["method"]>;
 const methods: Method[] = ["Cash", "bKash", "Payroll deduction"];
 
 function CollectionsPage() {
-  const { orders, employees, collections, upsertCollection, addAudit, role } = useAppData();
+  const { orders, employees, collections, recordCollection } = useAppData();
+  const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [active, setActive] = useState<Order | null>(null);
