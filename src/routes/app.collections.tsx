@@ -241,7 +241,9 @@ function CollectionsPage() {
             </div>
           </div>
           <DialogFooter>
-            <Button onClick={save}>Save payment</Button>
+            <Button onClick={() => void save()} disabled={saving}>
+              {saving ? "Saving…" : "Save payment"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
