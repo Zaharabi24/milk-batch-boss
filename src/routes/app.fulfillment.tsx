@@ -44,41 +44,43 @@ export const Route = createFileRoute("/app/fulfillment")({
 });
 
 function Fulfillment() {
-  const {
-    orders,
-    employees,
-    deliveryPoints,
-    activeBatch,
-    updateOrder,
-    addDeliveryRecord,
-    deliveryRecords,
-  } = useAppData();
+  const { orders, employees, deliveryPoints, activeBatch, setOrderStatus } = useAppData();
+  const [handover, setHandover] = useState<Order | null>(null);
+  const [receiverName, setReceiverName] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const todays = orders.filter(
     (o) => (!activeBatch || o.batchNo === activeBatch.batchNo) && o.status !== "Cancelled",
   );
 
+  async function move(order: Order, status: OrderStatus, receiver?: string, note?: string) {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await setOrderStatus(order.orderNo, status, receiver, note);
+      toast.success(
+        `${order.orderNo} → ${status === "OutForDelivery" ? "out for delivery" : status === "NotCollected" ? "not collected" : status.toLowerCase()}`,
+      );
+      setHandover(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update the order");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   function advance(order: Order) {
     const next = nextStatus[order.status];
     if (!next) return;
-    updateOrder(order.orderNo, { status: next }, "Fulfillment update");
     if (next === "Delivered") {
       const emp = employees.find((e) => e.id === order.employeeId);
-      const point = deliveryPoints.find((p) => p.id === order.deliveryPointId);
-      addDeliveryRecord({
-        couponNo: `DC-${2500 + deliveryRecords.length}`,
-        orderNo: order.orderNo,
-        recipientName: emp?.name ?? order.employeeId,
-        contact: emp?.phone ?? "—",
-        dateTime: new Date().toISOString(),
-        location: point?.name ?? "—",
-        floor: point?.id === "dp-gulshan" ? "Ground floor lobby" : "Factory store",
-        quantity: order.litres,
-        receiverName: emp?.name ?? order.employeeId,
-        remarks: "Handed over at counter",
-      });
+      setReceiverName(emp?.name ?? "");
+      setRemarks("");
+      setHandover(order);
+      return;
     }
-    toast.success(`${order.orderNo} → ${next === "OutForDelivery" ? "out for delivery" : next.toLowerCase()}`);
+    void move(order, next);
   }
 
   const groups = deliveryPoints
