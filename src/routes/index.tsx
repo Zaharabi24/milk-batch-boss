@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion, useInView, animate, useReducedMotion } from "framer-motion";
-import logoAsset from "@/assets/anwar-organic-logo.jpg.asset.json";
+import logoAsset from "@/assets/anwar-organic-logo.png.asset.json";
 import { useEffect, useRef, useState } from "react";
 import {
   Factory,
@@ -61,9 +61,9 @@ function Nav() {
         <img
           src={logoAsset.url}
           alt="Anwar Organic"
-          className="h-12 w-auto"
-          width={46}
-          height={48}
+          className="h-16 w-auto"
+          width={62}
+          height={64}
         />
         <nav className="hidden items-center gap-7 text-sm text-muted-foreground md:flex">
           <a href="#how-it-works" className="hover:text-foreground">
@@ -284,9 +284,9 @@ function Landing() {
           <img
             src={logoAsset.url}
             alt="Anwar Organic"
-            className="h-10 w-auto"
-            width={38}
-            height={40}
+            className="h-14 w-auto"
+            width={54}
+            height={56}
           />
           <span>An Anwar Agro Farms system</span>
           <span>© {new Date().getFullYear()} Anwar Group of Industries</span>
