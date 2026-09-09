@@ -40,6 +40,7 @@ function Fulfillment() {
     activeBatch,
     updateOrder,
     addDeliveryRecord,
+    deliveryRecords,
   } = useAppData();
 
   const todays = orders.filter(
@@ -52,12 +53,15 @@ function Fulfillment() {
     updateOrder(order.orderNo, { status: next }, "Fulfillment update");
     if (next === "Delivered") {
       const emp = employees.find((e) => e.id === order.employeeId);
+      const point = deliveryPoints.find((p) => p.id === order.deliveryPointId);
       addDeliveryRecord({
+        couponNo: `DC-${2500 + deliveryRecords.length}`,
         orderNo: order.orderNo,
         recipientName: emp?.name ?? order.employeeId,
         contact: emp?.phone ?? "—",
         dateTime: new Date().toISOString(),
-        location: deliveryPoints.find((p) => p.id === order.deliveryPointId)?.name ?? "—",
+        location: point?.name ?? "—",
+        floor: point?.id === "dp-gulshan" ? "Ground floor lobby" : "Factory store",
         quantity: order.litres,
         receiverName: emp?.name ?? order.employeeId,
         remarks: "Handed over at counter",

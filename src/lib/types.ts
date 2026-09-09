@@ -75,15 +75,36 @@ export interface Order {
 }
 
 export interface DeliveryRecord {
+  couponNo: string;
   orderNo: string;
   recipientName: string;
   contact: string;
   dateTime: string;
   location: string;
+  floor: string;
   quantity: number;
   receiverName: string;
   remarks: string;
 }
+
+export type NotificationKind =
+  | "BatchPublished"
+  | "CutoffReminder"
+  | "OrderConfirmed"
+  | "OrderCancelled"
+  | "OutForDelivery"
+  | "PaymentDue";
+
+export interface AppNotification {
+  id: string;
+  kind: NotificationKind;
+  audience: Role | "All";
+  title: string;
+  body: string;
+  timestamp: string;
+  read: boolean;
+}
+
 
 export interface CollectionRecord {
   orderNo: string;

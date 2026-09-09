@@ -1,4 +1,5 @@
 import type {
+  AppNotification,
   AuditLog,
   CollectionRecord,
   DailyMilkBatch,
@@ -206,14 +207,16 @@ export const orders: Order[] = [...todayOrders, ...historyOrders];
 export const deliveryRecords: DeliveryRecord[] = historyOrders
   .filter((o) => o.status === "Delivered")
   .slice(0, 12)
-  .map((o) => {
+  .map((o, i) => {
     const emp = employees.find((e) => e.id === o.employeeId)!;
     return {
+      couponNo: `DC-${2400 + i}`,
       orderNo: o.orderNo,
       recipientName: emp.name,
       contact: emp.phone,
       dateTime: o.createdAt,
       location: deliveryPoints.find((d) => d.id === o.deliveryPointId)!.name,
+      floor: o.deliveryPointId === "dp-gulshan" ? `Floor ${3 + (i % 6)}` : "Factory store",
       quantity: o.litres,
       receiverName: emp.name,
       remarks: "Collected on time",
@@ -266,5 +269,35 @@ export const auditLogs: AuditLog[] = [
     oldValue: "Active",
     newValue: "Closed",
     timestamp: atOffset(1, 18, 10),
+  },
+];
+
+export const notifications: AppNotification[] = [
+  {
+    id: "NT-003",
+    kind: "CutoffReminder",
+    audience: "All",
+    title: "Booking closes soon",
+    body: `Today's batch ${ACTIVE_BATCH_NO} stops accepting orders at the cut-off time.`,
+    timestamp: atOffset(0, 10, 0),
+    read: false,
+  },
+  {
+    id: "NT-002",
+    kind: "BatchPublished",
+    audience: "All",
+    title: "Fresh milk available today",
+    body: `Batch ${ACTIVE_BATCH_NO} is live — book your litres before the cut-off.`,
+    timestamp: atOffset(0, 8, 30),
+    read: false,
+  },
+  {
+    id: "NT-001",
+    kind: "PaymentDue",
+    audience: "Finance",
+    title: "Unpaid collections pending",
+    body: "Some delivered orders from earlier batches are still unpaid or partly paid.",
+    timestamp: atOffset(1, 17, 45),
+    read: true,
   },
 ];

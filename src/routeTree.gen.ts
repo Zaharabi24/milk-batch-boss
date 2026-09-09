@@ -14,8 +14,10 @@ import { Route as AppRouteImport } from './routes/app'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AppIndexRouteImport } from './routes/app.index'
 import { Route as AppCollectionsRouteImport } from './routes/app.collections'
+import { Route as AppCouponsRouteImport } from './routes/app.coupons'
 import { Route as AppFulfillmentRouteImport } from './routes/app.fulfillment'
 import { Route as AppMyOrdersRouteImport } from './routes/app.my-orders'
+import { Route as AppNotificationsRouteImport } from './routes/app.notifications'
 import { Route as AppOfferRouteImport } from './routes/app.offer'
 import { Route as AppOrdersRouteImport } from './routes/app.orders'
 import { Route as AppReportsRouteImport } from './routes/app.reports'
@@ -54,6 +56,11 @@ const AppCollectionsRoute = AppCollectionsRouteImport.update({
   path: '/collections',
   getParentRoute: () => AppRoute,
 } as any)
+const AppCouponsRoute = AppCouponsRouteImport.update({
+  id: '/coupons',
+  path: '/coupons',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppFulfillmentRoute = AppFulfillmentRouteImport.update({
   id: '/fulfillment',
   path: '/fulfillment',
@@ -62,6 +69,11 @@ const AppFulfillmentRoute = AppFulfillmentRouteImport.update({
 const AppMyOrdersRoute = AppMyOrdersRouteImport.update({
   id: '/my-orders',
   path: '/my-orders',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppNotificationsRoute = AppNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => AppRoute,
 } as any)
 const AppOfferRoute = AppOfferRouteImport.update({
@@ -131,8 +143,10 @@ export interface FileRoutesByFullPath {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/app/collections': typeof AppCollectionsRoute
+  '/app/coupons': typeof AppCouponsRoute
   '/app/fulfillment': typeof AppFulfillmentRoute
   '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/offer': typeof AppOfferRoute
   '/app/orders': typeof AppOrdersRoute
   '/app/reports': typeof AppReportsRoute
@@ -151,8 +165,10 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/app/collections': typeof AppCollectionsRoute
+  '/app/coupons': typeof AppCouponsRoute
   '/app/fulfillment': typeof AppFulfillmentRoute
   '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/offer': typeof AppOfferRoute
   '/app/orders': typeof AppOrdersRoute
   '/app/reports': typeof AppReportsRoute
@@ -173,8 +189,10 @@ export interface FileRoutesById {
   '/app': typeof AppRouteWithChildren
   '/login': typeof LoginRoute
   '/app/collections': typeof AppCollectionsRoute
+  '/app/coupons': typeof AppCouponsRoute
   '/app/fulfillment': typeof AppFulfillmentRoute
   '/app/my-orders': typeof AppMyOrdersRoute
+  '/app/notifications': typeof AppNotificationsRoute
   '/app/offer': typeof AppOfferRoute
   '/app/orders': typeof AppOrdersRoute
   '/app/reports': typeof AppReportsRoute
@@ -196,8 +214,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/app/collections'
+    | '/app/coupons'
     | '/app/fulfillment'
     | '/app/my-orders'
+    | '/app/notifications'
     | '/app/offer'
     | '/app/orders'
     | '/app/reports'
@@ -216,8 +236,10 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/app/collections'
+    | '/app/coupons'
     | '/app/fulfillment'
     | '/app/my-orders'
+    | '/app/notifications'
     | '/app/offer'
     | '/app/orders'
     | '/app/reports'
@@ -237,8 +259,10 @@ export interface FileRouteTypes {
     | '/app'
     | '/login'
     | '/app/collections'
+    | '/app/coupons'
     | '/app/fulfillment'
     | '/app/my-orders'
+    | '/app/notifications'
     | '/app/offer'
     | '/app/orders'
     | '/app/reports'
@@ -297,6 +321,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppCollectionsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/coupons': {
+      id: '/app/coupons'
+      path: '/coupons'
+      fullPath: '/app/coupons'
+      preLoaderRoute: typeof AppCouponsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/fulfillment': {
       id: '/app/fulfillment'
       path: '/fulfillment'
@@ -309,6 +340,13 @@ declare module '@tanstack/react-router' {
       path: '/my-orders'
       fullPath: '/app/my-orders'
       preLoaderRoute: typeof AppMyOrdersRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/notifications': {
+      id: '/app/notifications'
+      path: '/notifications'
+      fullPath: '/app/notifications'
+      preLoaderRoute: typeof AppNotificationsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/offer': {
@@ -400,8 +438,10 @@ declare module '@tanstack/react-router' {
 
 interface AppRouteChildren {
   AppCollectionsRoute: typeof AppCollectionsRoute
+  AppCouponsRoute: typeof AppCouponsRoute
   AppFulfillmentRoute: typeof AppFulfillmentRoute
   AppMyOrdersRoute: typeof AppMyOrdersRoute
+  AppNotificationsRoute: typeof AppNotificationsRoute
   AppOfferRoute: typeof AppOfferRoute
   AppOrdersRoute: typeof AppOrdersRoute
   AppReportsRoute: typeof AppReportsRoute
@@ -419,8 +459,10 @@ interface AppRouteChildren {
 
 const AppRouteChildren: AppRouteChildren = {
   AppCollectionsRoute: AppCollectionsRoute,
+  AppCouponsRoute: AppCouponsRoute,
   AppFulfillmentRoute: AppFulfillmentRoute,
   AppMyOrdersRoute: AppMyOrdersRoute,
+  AppNotificationsRoute: AppNotificationsRoute,
   AppOfferRoute: AppOfferRoute,
   AppOrdersRoute: AppOrdersRoute,
   AppReportsRoute: AppReportsRoute,

@@ -7,9 +7,11 @@ import {
   deliveryPoints as seedPoints,
   deliveryRecords as seedDeliveries,
   employees as seedEmployees,
+  notifications as seedNotifications,
   orders as seedOrders,
 } from "@/lib/mock-data";
 import type {
+  AppNotification,
   AuditLog,
   BatchStatus,
   CollectionRecord,
@@ -17,6 +19,7 @@ import type {
   DeliveryPoint,
   DeliveryRecord,
   Employee,
+  NotificationKind,
   Order,
   Role,
 } from "@/lib/types";
@@ -33,6 +36,15 @@ interface AppData {
   deliveryRecords: DeliveryRecord[];
   collections: CollectionRecord[];
   auditLogs: AuditLog[];
+  notifications: AppNotification[];
+  unreadCount: number;
+  notify: (n: {
+    kind: NotificationKind;
+    audience: Role | "All";
+    title: string;
+    body: string;
+  }) => void;
+  markNotificationsRead: () => void;
   remainingLitres: (batchNo: string) => number;
   addAudit: (entry: Omit<AuditLog, "id" | "timestamp">) => void;
   setBatchStatus: (batchNo: string, status: BatchStatus) => void;
@@ -62,6 +74,23 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [deliveryRecords, setDeliveryRecords] = useState<DeliveryRecord[]>(seedDeliveries);
   const [collections, setCollections] = useState<CollectionRecord[]>(seedCollections);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>(seedAudit);
+  const [notifications, setNotifications] = useState<AppNotification[]>(seedNotifications);
+
+  const notify = useCallback<AppData["notify"]>((n) => {
+    setNotifications((prev) => [
+      {
+        ...n,
+        id: `NT-${Date.now()}-${prev.length}`,
+        timestamp: new Date().toISOString(),
+        read: false,
+      },
+      ...prev,
+    ]);
+  }, []);
+
+  const markNotificationsRead = useCallback(() => {
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+  }, []);
 
   // Demo persona for the Employee role: Ayesha Siddika (HR, Head Office).
   const currentEmployee = employees.find((e) => e.id === "EMP-1006") ?? seedEmployees[0]!;
@@ -96,11 +125,19 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             oldValue: b.status,
             newValue: status,
           });
+          if (status === "Active") {
+            notify({
+              kind: "BatchPublished",
+              audience: "All",
+              title: "Fresh milk available today",
+              body: `Batch ${batchNo} is live at ৳${b.ratePerLitre}/L — book before the cut-off.`,
+            });
+          }
           return { ...b, status };
         }),
       );
     },
-    [addAudit, role],
+    [addAudit, notify, role],
   );
 
   const addBatch = useCallback(
@@ -145,9 +182,15 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         oldValue: "—",
         newValue: `${litres} L`,
       });
+      notify({
+        kind: "OrderConfirmed",
+        audience: "Employee",
+        title: `Order ${order.orderNo} confirmed`,
+        body: `${litres} L reserved for ${batch.deliveryDate}, ${batch.deliveryWindow}.`,
+      });
       return order;
     },
-    [addAudit, batches, orders, remainingLitres],
+    [addAudit, batches, notify, orders, remainingLitres],
   );
 
   const cancelOrder = useCallback(
@@ -162,8 +205,14 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         oldValue: "Confirmed",
         newValue: "Cancelled",
       });
+      notify({
+        kind: "OrderCancelled",
+        audience: "Employee",
+        title: `Order ${orderNo} cancelled`,
+        body: `Reason: ${reason}. The litres are back in the pool.`,
+      });
     },
-    [addAudit, role],
+    [addAudit, notify, role],
   );
 
   const updateOrder = useCallback(
@@ -180,20 +229,39 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
             oldValue: `${o.litres} L / ${o.status}`,
             newValue: `${next.litres} L / ${next.status}`,
           });
+          if (patch.status === "OutForDelivery") {
+            notify({
+              kind: "OutForDelivery",
+              audience: "Employee",
+              title: `Order ${orderNo} is on the way`,
+              body: "Your milk has left the store — please collect it from your delivery point.",
+            });
+          }
           return next;
         }),
       );
     },
-    [addAudit, role],
+    [addAudit, notify, role],
   );
 
   const addDeliveryRecord = useCallback((record: DeliveryRecord) => {
     setDeliveryRecords((prev) => [record, ...prev]);
   }, []);
 
-  const upsertCollection = useCallback((record: CollectionRecord) => {
-    setCollections((prev) => [record, ...prev.filter((c) => c.orderNo !== record.orderNo)]);
-  }, []);
+  const upsertCollection = useCallback(
+    (record: CollectionRecord) => {
+      setCollections((prev) => [record, ...prev.filter((c) => c.orderNo !== record.orderNo)]);
+      if (record.status !== "Paid") {
+        notify({
+          kind: "PaymentDue",
+          audience: "Finance",
+          title: `Payment outstanding on ${record.orderNo}`,
+          body: `৳${Math.round(record.amountDue - record.amountCollected)} still to be collected.`,
+        });
+      }
+    },
+    [notify],
+  );
 
   const value = useMemo<AppData>(
     () => ({
@@ -208,6 +276,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       deliveryRecords,
       collections,
       auditLogs,
+      notifications,
+      unreadCount: notifications.filter((n) => !n.read).length,
+      notify,
+      markNotificationsRead,
       remainingLitres,
       addAudit,
       setBatchStatus,
@@ -230,6 +302,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       deliveryRecords,
       collections,
       auditLogs,
+      notifications,
+      notify,
+      markNotificationsRead,
       remainingLitres,
       addAudit,
       setBatchStatus,
