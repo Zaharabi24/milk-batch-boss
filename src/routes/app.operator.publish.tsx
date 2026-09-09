@@ -1,5 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState } from "@/components/page-header";
@@ -22,6 +23,7 @@ export const Route = createFileRoute("/app/operator/publish")({
 function Publish() {
   const { batches, deliveryPoints, setBatchStatus } = useAppData();
   const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
   const draft = batches.find((b) => b.status === "Draft") ?? batches.find((b) => b.status === "Active");
 
   if (!draft) {
