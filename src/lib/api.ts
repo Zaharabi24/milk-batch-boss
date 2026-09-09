@@ -267,8 +267,8 @@ export async function setOrderStatus(
   const { error } = await supabase.rpc("set_order_status", {
     p_order_no: orderNo,
     p_status: status,
-    p_receiver_name: receiverName ?? null,
-    p_remarks: remarks ?? null,
+    p_receiver_name: receiverName ?? undefined,
+    p_remarks: remarks ?? undefined,
   });
   fail(error);
 }
