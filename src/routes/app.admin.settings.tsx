@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,28 +22,59 @@ export const Route = createFileRoute("/app/admin/settings")({
 });
 
 function SettingsPage() {
-  const { addAudit, role } = useAppData();
-  const [rate, setRate] = useState(92);
-  const [cutoff, setCutoff] = useState("13:00");
-  const [cap, setCap] = useState(10);
-  const [minOrder, setMinOrder] = useState(1);
-  const [window, setWindow] = useState("4:00 PM – 6:30 PM");
-  const [emailAlerts, setEmailAlerts] = useState(true);
-  const [smsAlerts, setSmsAlerts] = useState(false);
-  const [autoClose, setAutoClose] = useState(true);
+  const { settings, saveSettings } = useAppData();
+  const [rate, setRate] = useState(settings?.defaultRate ?? 92);
+  const [cutoff, setCutoff] = useState(settings?.defaultCutoff ?? "13:00");
+  const [cap, setCap] = useState(settings?.defaultEmployeeCap ?? 10);
+  const [minOrder, setMinOrder] = useState(settings?.defaultMinOrder ?? 1);
+  const [maxOrder, setMaxOrder] = useState(settings?.defaultMaxOrder ?? 10);
+  const [window, setWindow] = useState(settings?.defaultDeliveryWindow ?? "4:00 PM – 6:30 PM");
+  const [emailAlerts, setEmailAlerts] = useState(settings?.emailOnPublish ?? true);
+  const [smsAlerts, setSmsAlerts] = useState(settings?.smsBeforeCutoff ?? false);
+  const [autoClose, setAutoClose] = useState(settings?.autoCloseAtCutoff ?? true);
   const [terms, setTerms] = useState(
-    "Milk is sold to employees at cost. Orders are binding after the daily cutoff and settled through payroll unless paid at collection.",
+    settings?.terms ??
+      "Milk is sold to employees at cost. Orders are binding after the daily cutoff and settled through payroll unless paid at collection.",
   );
+  const [busy, setBusy] = useState(false);
 
-  function save() {
-    addAudit({
-      user: role,
-      action: "Updated system settings",
-      record: "SETTINGS",
-      oldValue: "Previous defaults",
-      newValue: `৳${rate}/L, cutoff ${cutoff}, cap ${cap} L`,
-    });
-    toast.success("Settings saved");
+  // Populate the form once settings arrive from the backend.
+  useEffect(() => {
+    if (!settings) return;
+    setRate(settings.defaultRate);
+    setCutoff(settings.defaultCutoff);
+    setCap(settings.defaultEmployeeCap);
+    setMinOrder(settings.defaultMinOrder);
+    setMaxOrder(settings.defaultMaxOrder);
+    setWindow(settings.defaultDeliveryWindow);
+    setEmailAlerts(settings.emailOnPublish);
+    setSmsAlerts(settings.smsBeforeCutoff);
+    setAutoClose(settings.autoCloseAtCutoff);
+    setTerms(settings.terms);
+  }, [settings]);
+
+  async function save() {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await saveSettings({
+        defaultRate: rate,
+        defaultCutoff: cutoff,
+        defaultEmployeeCap: cap,
+        defaultMinOrder: minOrder,
+        defaultMaxOrder: maxOrder,
+        defaultDeliveryWindow: window,
+        emailOnPublish: emailAlerts,
+        smsBeforeCutoff: smsAlerts,
+        autoCloseAtCutoff: autoClose,
+        terms,
+      });
+      toast.success("Settings saved");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save settings");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
@@ -63,9 +94,12 @@ function SettingsPage() {
               <Input type="number" value={cap} onChange={(e) => setCap(Number(e.target.value))} />
             </Field>
           </div>
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <Field label="Minimum order (L)">
               <Input type="number" value={minOrder} onChange={(e) => setMinOrder(Number(e.target.value))} />
+            </Field>
+            <Field label="Maximum order (L)">
+              <Input type="number" value={maxOrder} onChange={(e) => setMaxOrder(Number(e.target.value))} />
             </Field>
             <Field label="Default delivery window">
               <Input value={window} onChange={(e) => setWindow(e.target.value)} />
@@ -92,7 +126,9 @@ function SettingsPage() {
         </Section>
 
         <div className="flex justify-end">
-          <Button onClick={save}>Save settings</Button>
+          <Button onClick={() => void save()} disabled={busy}>
+            {busy ? "Saving…" : "Save settings"}
+          </Button>
         </div>
       </div>
     </div>
