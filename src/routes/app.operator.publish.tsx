@@ -77,11 +77,18 @@ function Publish() {
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Button
-          disabled={!isDraft}
+          disabled={!isDraft || busy}
           onClick={() => {
-            setBatchStatus(draft.batchNo, "Active");
-            toast.success(`${draft.batchNo} published — bookings are open`);
-            void navigate({ to: "/app/operator" });
+            setBusy(true);
+            setBatchStatus(draft.batchNo, "Active")
+              .then(() => {
+                toast.success(`${draft.batchNo} published — bookings are open`);
+                void navigate({ to: "/app/operator" });
+              })
+              .catch((e: unknown) =>
+                toast.error(e instanceof Error ? e.message : "Could not publish the batch"),
+              )
+              .finally(() => setBusy(false));
           }}
         >
           {isDraft ? "Publish batch" : "Already published"}
