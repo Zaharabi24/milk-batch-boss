@@ -27,7 +27,6 @@ import {
 import { PageHeader } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { useAppData } from "@/context/app-data";
-import { batchTotals } from "@/lib/mock-data";
 import { dateShort, litres, taka } from "@/lib/format";
 
 export const Route = createFileRoute("/app/reports")({
@@ -45,7 +44,7 @@ export const Route = createFileRoute("/app/reports")({
 const PALETTE = ["var(--color-primary)", "var(--color-accent)", "var(--color-info)", "var(--color-muted-foreground)"];
 
 function ReportsPage() {
-  const { batches, orders, collections, deliveryPoints } = useAppData();
+  const { batches, orders, collections, deliveryPoints, batchStats } = useAppData();
   const [range, setRange] = useState("7");
 
   const span = Number(range);
@@ -56,23 +55,25 @@ function ReportsPage() {
         .slice(0, span)
         .reverse()
         .map((b) => {
-          const totals = batchTotals[b.batchNo];
+          const stats = batchStats.find((s) => s.batch_no === b.batchNo);
           const live = orders.filter((o) => o.batchNo === b.batchNo && o.status !== "Cancelled");
-          const booked = totals?.booked ?? live.reduce((s, o) => s + o.litres, 0);
+          const booked = stats?.booked_litres ?? live.reduce((s, o) => s + o.litres, 0);
           const delivered =
-            totals?.delivered ??
+            stats?.delivered_litres ??
             live.filter((o) => o.status === "Delivered").reduce((s, o) => s + o.litres, 0);
           return {
             name: dateShort(b.productionDate).slice(0, 6),
             produced: b.producedLitres,
             booked,
             delivered,
-            unsold: Math.max(0, b.saleableLitres - booked),
-            revenue: delivered * b.ratePerLitre,
-            sellThrough: Math.round((booked / b.saleableLitres) * 100),
+            unsold: Math.max(0, stats?.unsold_litres ?? b.saleableLitres - booked),
+            revenue: stats?.gross_value ?? booked * b.ratePerLitre,
+            sellThrough:
+              stats?.sell_through_pct ??
+              (b.saleableLitres ? Math.round((booked / b.saleableLitres) * 100) : 0),
           };
         }),
-    [batches, orders, span],
+    [batches, orders, batchStats, span],
   );
 
   const produced = series.reduce((s, r) => s + r.produced, 0);

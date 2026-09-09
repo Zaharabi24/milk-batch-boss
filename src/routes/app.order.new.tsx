@@ -32,6 +32,7 @@ function NewOrderPage() {
   const navigate = useNavigate();
   const [litres, setLitres] = useState(2);
   const [point, setPoint] = useState<string>(activeBatch?.deliveryPoints[0] ?? "");
+  const [busy, setBusy] = useState(false);
 
   if (!activeBatch || activeBatch.status !== "Active") {
     return (
@@ -55,7 +56,8 @@ function NewOrderPage() {
   );
   const left = countdown(activeBatch.bookingCutoff);
 
-  const submit = () => {
+  const submit = async () => {
+    if (busy) return;
     if (existing) {
       toast.error(`You already have order ${existing.orderNo} on this batch. Cancel it first.`);
       return;
@@ -64,18 +66,20 @@ function NewOrderPage() {
       toast.error("Bookings closed at the cut-off time for today.");
       return;
     }
-    const order = confirmOrder({
-      employeeId: currentEmployee.id,
-      batchNo: activeBatch.batchNo,
-      litres,
-      deliveryPointId: point,
-    });
-    if (!order) {
-      toast.error(`Only ${remaining} L are left — lower your quantity and try again.`);
-      return;
+    setBusy(true);
+    try {
+      const order = await confirmOrder({
+        batchNo: activeBatch.batchNo,
+        litres,
+        deliveryPointId: point,
+      });
+      toast.success("Order confirmed");
+      navigate({ to: "/app/order/confirmation/$orderId", params: { orderId: order.orderNo } });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not place your order");
+    } finally {
+      setBusy(false);
     }
-    toast.success("Order confirmed");
-    navigate({ to: "/app/order/confirmation/$orderId", params: { orderId: order.orderNo } });
   };
 
   return (
@@ -176,8 +180,8 @@ function NewOrderPage() {
                 {taka(litres * activeBatch.ratePerLitre)}
               </p>
             </div>
-            <Button size="lg" onClick={submit}>
-              Confirm order
+            <Button size="lg" onClick={() => void submit()} disabled={busy}>
+              {busy ? "Confirming…" : "Confirm order"}
             </Button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">

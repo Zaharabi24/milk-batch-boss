@@ -59,12 +59,13 @@ const blank: Employee = {
 };
 
 function EmployeesPage() {
-  const { employees, setEmployees, addAudit, role } = useAppData();
+  const { employees, upsertEmployee, setEmployeeActive } = useAppData();
   const [query, setQuery] = useState("");
   const [dept, setDept] = useState("all");
   const [site, setSite] = useState("all");
   const [draft, setDraft] = useState<Employee | null>(null);
   const [isNew, setIsNew] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const rows = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -80,41 +81,32 @@ function EmployeesPage() {
       );
   }, [employees, query, dept, site]);
 
-  function toggleActive(emp: Employee) {
-    setEmployees(employees.map((e) => (e.id === emp.id ? { ...e, active: !e.active } : e)));
-    addAudit({
-      user: role,
-      action: emp.active ? "Deactivated employee" : "Activated employee",
-      record: emp.id,
-      oldValue: emp.active ? "Active" : "Inactive",
-      newValue: emp.active ? "Inactive" : "Active",
-    });
-    toast.success(`${emp.name} ${emp.active ? "deactivated" : "activated"}`);
+  async function toggleActive(emp: Employee) {
+    try {
+      await setEmployeeActive(emp.id, !emp.active);
+      toast.success(`${emp.name} ${emp.active ? "deactivated" : "activated"}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update the employee");
+    }
   }
 
-  function save() {
-    if (!draft) return;
+  async function save() {
+    if (!draft || busy) return;
     if (!draft.name.trim() || !draft.companyEmail.trim()) {
       toast.error("Name and company email are required.");
       return;
     }
-    if (isNew) {
-      const id = `EMP-${1000 + employees.length + 1}`;
-      setEmployees([{ ...draft, id }, ...employees]);
-      addAudit({ user: role, action: "Added employee", record: id, oldValue: "—", newValue: draft.name });
-      toast.success(`${draft.name} added`);
-    } else {
-      setEmployees(employees.map((e) => (e.id === draft.id ? draft : e)));
-      addAudit({
-        user: role,
-        action: "Edited employee",
-        record: draft.id,
-        oldValue: "Previous details",
-        newValue: draft.name,
-      });
-      toast.success(`${draft.name} updated`);
+    setBusy(true);
+    try {
+      const id = isNew ? `EMP-${1000 + employees.length + 1}` : draft.id;
+      await upsertEmployee({ ...draft, id });
+      toast.success(`${draft.name} ${isNew ? "added" : "updated"}`);
+      setDraft(null);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not save the employee");
+    } finally {
+      setBusy(false);
     }
-    setDraft(null);
   }
 
   return (
@@ -211,7 +203,7 @@ function EmployeesPage() {
                     <span className="block text-xs text-muted-foreground">{e.phone}</span>
                   </Td>
                   <Td>
-                    <Switch checked={e.active} onCheckedChange={() => toggleActive(e)} />
+                    <Switch checked={e.active} onCheckedChange={() => void toggleActive(e)} />
                   </Td>
                   <Td>
                     <Button
@@ -294,7 +286,9 @@ function EmployeesPage() {
             </div>
           ) : null}
           <DialogFooter>
-            <Button onClick={save}>Save</Button>
+            <Button onClick={() => void save()} disabled={busy}>
+              {busy ? "Saving…" : "Save"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

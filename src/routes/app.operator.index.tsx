@@ -8,12 +8,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader, EmptyState } from "@/components/page-header";
 import { StatCard } from "@/components/stat-card";
 import { BatchStatusBadge } from "@/components/status-badge";
 import { useAppData } from "@/context/app-data";
-import { batchTotals } from "@/lib/mock-data";
 import { dateShort, litres, taka } from "@/lib/format";
 
 export const Route = createFileRoute("/app/operator/")({
@@ -29,7 +29,7 @@ export const Route = createFileRoute("/app/operator/")({
 });
 
 function OperatorDashboard() {
-  const { batches, activeBatch, orders, remainingLitres, setBatchStatus } = useAppData();
+  const { batches, activeBatch, orders, remainingLitres, setBatchStatus, batchStats } = useAppData();
 
   if (!activeBatch) {
     return (
@@ -54,15 +54,20 @@ function OperatorDashboard() {
   const revenue = todayOrders.reduce((s, o) => s + o.amount, 0);
 
   const trend = batches
-    .filter((b) => batchTotals[b.batchNo])
     .slice(0, 7)
     .reverse()
-    .map((b) => ({
-      name: dateShort(b.productionDate).slice(0, 6),
-      Produced: b.producedLitres,
-      Booked: batchTotals[b.batchNo]!.booked,
-      Delivered: batchTotals[b.batchNo]!.delivered,
-    }));
+    .map((b) => {
+      const stats = batchStats.find((s) => s.batch_no === b.batchNo);
+      const live = orders.filter((o) => o.batchNo === b.batchNo && o.status !== "Cancelled");
+      return {
+        name: dateShort(b.productionDate).slice(0, 6),
+        Produced: b.producedLitres,
+        Booked: stats?.booked_litres ?? live.reduce((s, o) => s + o.litres, 0),
+        Delivered:
+          stats?.delivered_litres ??
+          live.filter((o) => o.status === "Delivered").reduce((s, o) => s + o.litres, 0),
+      };
+    });
 
   return (
     <div className="mx-auto w-full max-w-6xl">
@@ -76,14 +81,14 @@ function OperatorDashboard() {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setBatchStatus(activeBatch.batchNo, "Paused")}
+                onClick={() => void setBatchStatus(activeBatch.batchNo, "Paused").catch((e) => toast.error(e instanceof Error ? e.message : "Could not update the batch"))}
               >
                 Pause bookings
               </Button>
             ) : (
               <Button
                 size="sm"
-                onClick={() => setBatchStatus(activeBatch.batchNo, "Active")}
+                onClick={() => void setBatchStatus(activeBatch.batchNo, "Active").catch((e) => toast.error(e instanceof Error ? e.message : "Could not update the batch"))}
               >
                 Resume bookings
               </Button>
@@ -91,7 +96,7 @@ function OperatorDashboard() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => setBatchStatus(activeBatch.batchNo, "Closed")}
+              onClick={() => void setBatchStatus(activeBatch.batchNo, "Closed").catch((e) => toast.error(e instanceof Error ? e.message : "Could not update the batch"))}
             >
               Close batch
             </Button>

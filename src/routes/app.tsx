@@ -71,8 +71,6 @@ const navByRole: Record<Role, NavItem[]> = {
   ],
 };
 
-const allRoles = Object.keys(navByRole) as Role[];
-
 const linkClass =
   "rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground data-[status=active]:bg-secondary data-[status=active]:font-medium data-[status=active]:text-primary-deep";
 
