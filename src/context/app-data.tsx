@@ -303,7 +303,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       collections,
       auditLogs,
       notifications,
-      unreadCount: notifications.filter((n) => !n.read).length,
+      notify,
       notify,
       markNotificationsRead,
       remainingLitres,
