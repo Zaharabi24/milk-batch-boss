@@ -29,51 +29,56 @@ function todayAt(hour: number, minute = 0) {
 }
 
 function NewBatch() {
-  const { batches, deliveryPoints, addBatch } = useAppData();
+  const { deliveryPoints, addBatch, settings } = useAppData();
   const navigate = useNavigate();
 
   const [produced, setProduced] = useState(640);
   const [saleable, setSaleable] = useState(600);
-  const [rate, setRate] = useState(92);
-  const [minOrder, setMin] = useState(1);
-  const [maxOrder, setMax] = useState(10);
-  const [cap, setCap] = useState(10);
-  const [window, setWindow] = useState("4:00 PM – 6:30 PM");
+  const [rate, setRate] = useState(settings?.defaultRate ?? 92);
+  const [minOrder, setMin] = useState(settings?.defaultMinOrder ?? 1);
+  const [maxOrder, setMax] = useState(settings?.defaultMaxOrder ?? 10);
+  const [cap, setCap] = useState(settings?.defaultEmployeeCap ?? 10);
+  const [window, setWindow] = useState(settings?.defaultDeliveryWindow ?? "4:00 PM – 6:30 PM");
   const [note, setNote] = useState("Chilled at 4°C. Please bring your own carry bag.");
-  const [points, setPoints] = useState<string[]>(["dp-gulshan", "dp-savar"]);
+  const [points, setPoints] = useState<string[]>([]);
+  const [busy, setBusy] = useState(false);
 
-  const nextNo = `BATCH-${2410 + batches.filter((b) => b.batchNo.startsWith("BATCH-")).length - 9}`;
   const invalid = saleable > produced || minOrder > maxOrder || points.length === 0;
 
-  function submit() {
+  async function submit() {
     if (invalid) {
       toast.error("Please fix the highlighted values first.");
       return;
     }
-    addBatch({
-      batchNo: nextNo,
-      productionDate: todayAt(6),
-      product: "Fresh Whole Milk",
-      producedLitres: produced,
-      saleableLitres: saleable,
-      ratePerLitre: rate,
-      minOrder,
-      maxOrder,
-      employeeCap: cap,
-      bookingCutoff: todayAt(13),
-      deliveryDate: todayAt(16),
-      deliveryWindow: window,
-      deliveryPoints: points,
-      note,
-      status: "Draft",
-    });
-    toast.success(`${nextNo} saved as draft`);
-    void navigate({ to: "/app/operator/publish" });
+    if (busy) return;
+    setBusy(true);
+    try {
+      const batch = await addBatch({
+        productionDate: todayAt(6),
+        produced,
+        saleable,
+        rate,
+        minOrder,
+        maxOrder,
+        employeeCap: cap,
+        bookingCutoff: todayAt(13),
+        deliveryDate: todayAt(16),
+        deliveryWindow: window,
+        deliveryPoints: points,
+        note,
+      });
+      toast.success(`${batch.batchNo} saved as draft`);
+      void navigate({ to: "/app/operator/publish" });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not create the batch");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
     <div className="mx-auto w-full max-w-3xl">
-      <PageHeader title="New batch" description={`Draft ${nextNo} — employees see it only after you publish.`} />
+      <PageHeader title="New batch" description="Saved as a draft — employees see it only after you publish." />
 
       <div className="space-y-6 rounded-xl border border-border bg-card p-6">
         <div className="grid gap-4 sm:grid-cols-3">
@@ -135,8 +140,8 @@ function NewBatch() {
           <p className="text-sm text-muted-foreground">
             Potential value: <span className="font-medium text-foreground">{taka(saleable * rate)}</span>
           </p>
-          <Button onClick={submit} disabled={invalid}>
-            Save draft & review
+          <Button onClick={() => void submit()} disabled={invalid || busy}>
+            {busy ? "Saving…" : "Save draft & review"}
           </Button>
         </div>
       </div>
